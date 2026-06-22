@@ -1,0 +1,23 @@
+# 油井报表管理系统 - 依赖列表
+# 
+# Windows 安装命令:
+#   pip install -r requirements.txt
+# 
+# Android 依赖由 buildozer.spec 中的 requirements 字段指定
+
+# 后端框架
+flask>=2.0.0
+flask-cors>=4.0.0
+
+# Windows 桌面窗口
+pywebview>=4.0.0
+
+# 打包工具（开发环境使用）
+pyinstaller>=5.0.0
+
+# Kivy（Android 开发测试用，可选）
+# kivy>=2.2.0
+# Cython>=0.29.0
+
+# Buildozer（Android 打包用，可选）
+# buildozer>=1.5.0
