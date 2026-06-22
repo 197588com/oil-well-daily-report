@@ -1,1 +1,1021 @@
-...
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>油井报表管理系统</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  body { font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+  .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
+  .tab-inactive { color: #6b7280; }
+  .tab-inactive:hover { color: #374151; }
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; }
+  .input { border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem; width: 100%; font-size: 0.875rem; }
+  .input:focus { outline: none; border-color: #2563eb; }
+  .btn { background: #2563eb; color: #fff; border: none; border-radius: 0.375rem; padding: 0.5rem 1rem; cursor: pointer; font-size: 0.875rem; }
+  .btn:hover { background: #1d4ed8; }
+  .btn-sec { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 0.5rem 1rem; cursor: pointer; font-size: 0.875rem; }
+  .btn-sec:hover { background: #e5e7eb; }
+  .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+  .btn-red { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+  .btn-red:hover { background: #fecaca; }
+  .badge { background: #dbeafe; color: #1e40af; font-size: 0.75rem; padding: 0.125rem 0.5rem; border-radius: 0.25rem; }
+  .success { color: #16a34a; font-weight: 600; }
+  .info { color: #2563eb; font-weight: 600; }
+  .warn { color: #d97706; font-weight: 600; }
+  .danger { color: #dc2626; font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  th { background: #f9fafb; padding: 0.5rem; text-align: left; font-weight: 600; border-bottom: 1px solid #e5e7eb; }
+  td { padding: 0.5rem; border-bottom: 1px solid #f3f4f6; }
+  tr:hover td { background: #fafafa; }
+  .hidden { display: none; }
+  .gap-row td { background: #fef2f2 !important; }
+  .input-edit { padding: 0.25rem 0.5rem; font-size: 0.875rem; width: 80px; border: 1px solid #2563eb; border-radius: 0.25rem; }
+  .input-edit:focus { outline: none; background: #eff6ff; }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+<div class="max-w-6xl mx-auto p-4">
+  <header class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">🛢️ 油井报表管理系统</h1>
+    <p class="text-sm text-gray-500">渤页平5 / 义页1-1VF / 义页1-2HF</p>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="flex space-x-6 mb-4 border-b border-gray-200">
+    <button onclick="switchTab('history')" id="tab-history" class="tab-active pb-2">📋 历史报表</button>
+    <button onclick="switchTab('input')" id="tab-input" class="tab-inactive pb-2">📝 录入今日数据</button>
+    <button onclick="switchTab('coeff')" id="tab-coeff" class="tab-inactive pb-2">⚙️ 系数设置</button>
+    <button onclick="switchTab('chart')" id="tab-chart" class="tab-inactive pb-2">📈 趋势分析</button>
+    <button onclick="switchTab('daily')" id="tab-daily" class="tab-inactive pb-2">📰 日报生成</button>
+  </nav>
+
+  <!-- History -->
+  <section id="page-history">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="text-lg font-bold">历史报表</h2>
+      <div class="flex gap-2">
+        <button class="btn-sec" onclick="exportHistoryCSV()">📥 导出CSV</button>
+        <button class="btn-sec" onclick="exportJSON()">💾 备份JSON</button>
+      </div>
+    </div>
+    <!-- 数据导入区 -->
+    <div class="card mb-4 bg-amber-50 border-amber-200">
+      <h3 class="font-bold text-amber-800 mb-2">🔄 新环境数据导入</h3>
+      <p class="text-sm text-amber-700 mb-2">换电脑或新浏览器时，先导入之前的报表数据，再录入今日数据。</p>
+      <div class="flex gap-2 flex-wrap">
+        <label class="btn-sec cursor-pointer">
+          📂 导入 JSON 备份
+          <input type="file" accept=".json" class="hidden" onchange="importJSON(event)">
+        </label>
+        <label class="btn-sec cursor-pointer">
+          📂 导入 CSV 报表
+          <input type="file" accept=".csv" class="hidden" onchange="importCSV(event)">
+        </label>
+        <button class="btn-sec" onclick="resetToDefault()">↩ 恢复示例数据</button>
+        <button class="btn-sec text-red-600" onclick="clearAllData()">🗑 清空全部数据</button>
+      </div>
+      <p id="import-status" class="text-sm mt-2 hidden"></p>
+    </div>
+    <div class="space-y-4" id="history-cards"></div>
+  </section>
+
+  <!-- Input -->
+  <section id="page-input" class="hidden">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="text-lg font-bold">录入今日数据</h2>
+      <span class="badge" id="today-badge"></span>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="input-cards"></div>
+    <div class="mt-4 text-center">
+      <button class="btn" onclick="saveToday()">💾 保存并生成报表</button>
+      <button class="btn-sec ml-2" onclick="previewToday()">👁 预览</button>
+    </div>
+    <div id="preview-area" class="mt-4 hidden card"></div>
+  </section>
+
+  <!-- Coeff -->
+  <section id="page-coeff" class="hidden">
+    <h2 class="text-lg font-bold mb-3">系数设置</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="coeff-cards"></div>
+    <div class="mt-4">
+      <button class="btn" onclick="saveCoeff()">💾 保存为默认系数</button>
+      <button class="btn-sec ml-2" onclick="resetCoeff()">↩ 恢复初始</button>
+    </div>
+  </section>
+
+  <!-- Chart -->
+  <section id="page-chart" class="hidden">
+    <h2 class="text-lg font-bold mb-3">趋势分析</h2>
+    <div id="chart-area" class="space-y-6"></div>
+  </section>
+
+  <!-- Daily Report -->
+  <section id="page-daily" class="hidden">
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="text-lg font-bold">📰 油井日报</h2>
+      <div class="flex gap-2 items-center">
+        <label class="text-sm text-gray-600">选择日期：</label>
+        <input type="date" id="daily-date" class="input" style="width:auto;display:inline-block;" onchange="renderDaily()">
+        <button class="btn" onclick="exportDailyPDF()">📄 导出 PDF</button>
+        <button class="btn-sec" onclick="exportDailyPNG()">🖼️ 导出图片</button>
+      </div>
+    </div>
+    <div id="daily-report-area" class="card" style="background:#fff;"></div>
+  </section>
+
+</div>
+
+<script>
+// ===================== 默认数据 =====================
+const DEFAULT_DATA = {"渤页平5": [{"day": 1, "date": "2026-06-15", "pressure": 9.03, "temp": 22.05, "water_ratio": 61.53, "gas_meter_2": 32415054, "liquid": 24.38, "oil": 9.39, "water": 14.99, "gas": 18580, "cum_oil": 35963.09, "cum_water": 86182.56, "cum_gas": 34449265}, {"day": 2, "date": "2026-06-16", "pressure": 5.91, "temp": 22.05, "water_ratio": 60.23, "gas_meter_2": 32433634, "liquid": 15.96, "oil": 6.35, "water": 9.61, "gas": 18580, "cum_oil": 35969.39, "cum_water": 86192.95, "cum_gas": 34467875}, {"day": 3, "date": "2026-06-17", "pressure": 6.16, "temp": 22, "water_ratio": 60.23, "gas_meter_2": 32452120, "liquid": 16.63, "oil": 6.61, "water": 10.02, "gas": 18486, "cum_oil": 35976.0, "cum_water": 86202.97, "cum_gas": 34476703}, {"day": 4, "date": "2026-06-18", "pressure": 5.88, "temp": 22, "water_ratio": 60.19, "gas_meter_2": 32470796, "liquid": 15.88, "oil": 6.32, "water": 9.56, "gas": 18676, "cum_oil": 35982.32, "cum_water": 86212.53, "cum_gas": 34485899}, {"day": 5, "date": "2026-06-20", "pressure": 5.97, "temp": 22.43, "water_ratio": 60.23, "gas_meter_2": 32486600, "liquid": 16.12, "oil": 6.41, "water": 9.71, "gas": 15804, "cum_oil": 35988.73, "cum_water": 86222.24, "cum_gas": 34501703}], "义页1-1VF": [{"day": 1, "date": "2026-06-15", "pressure": 0.91, "temp": 18, "water_ratio": 61.0, "liquid": 1.0, "oil": 0.39, "water": 0.61, "gas": 295, "cum_oil": 6530.2, "cum_water": 23099.01, "cum_gas": 7455665}, {"day": 2, "date": "2026-06-16", "pressure": 1.0, "temp": 18, "water_ratio": 60.88, "liquid": 1.3, "oil": 0.51, "water": 0.79, "gas": 403, "cum_oil": 6530.75, "cum_water": 23099.86, "cum_gas": 7456100}, {"day": 3, "date": "2026-06-17", "pressure": 1.08, "temp": 18, "water_ratio": 60.88, "liquid": 1.4, "oil": 0.55, "water": 0.85, "gas": 435, "cum_oil": 6531.56, "cum_water": 23101.13, "cum_gas": 7456745}, {"day": 4, "date": "2026-06-18", "pressure": 1.6, "temp": 18, "water_ratio": 61.01, "liquid": 2.08, "oil": 0.81, "water": 1.27, "gas": 645, "cum_oil": 6532.37, "cum_water": 23102.4, "cum_gas": 7457390}, {"day": 5, "date": "2026-06-20", "pressure": 1.95, "temp": 18, "water_ratio": 60.88, "liquid": 2.67, "oil": 1.04, "water": 1.63, "gas": 786, "cum_oil": 6533.41, "cum_water": 23104.03, "cum_gas": 7458176}], "义页1-2HF": [{"day": 1, "date": "2026-06-15", "pressure": 9.85, "temp": 28.3, "water_ratio": 85.83, "liquid": 23.64, "oil": 3.35, "water": 20.29, "gas": 18222, "cum_oil": 10409.68, "cum_water": 56833.53, "cum_gas": 33373681}, {"day": 2, "date": "2026-06-16", "pressure": 9.86, "temp": 28, "water_ratio": 85.83, "liquid": 23.66, "oil": 3.35, "water": 20.31, "gas": 18241, "cum_oil": 10413.03, "cum_water": 56853.84, "cum_gas": 33391922}, {"day": 3, "date": "2026-06-17", "pressure": 9.87, "temp": 28, "water_ratio": 85.86, "liquid": 23.69, "oil": 3.35, "water": 20.34, "gas": 18260, "cum_oil": 10416.38, "cum_water": 56874.18, "cum_gas": 33410182}, {"day": 4, "date": "2026-06-18", "pressure": 9.87, "temp": 28, "water_ratio": 85.86, "liquid": 23.69, "oil": 3.35, "water": 20.34, "gas": 18260, "cum_oil": 10419.73, "cum_water": 56894.52, "cum_gas": 33428443}, {"day": 5, "date": "2026-06-20", "pressure": 9.84, "temp": 28.23, "water_ratio": 85.86, "liquid": 23.62, "oil": 3.34, "water": 20.28, "gas": 18204, "cum_oil": 10423.07, "cum_water": 56914.8, "cum_gas": 33446647}]};
+const DEFAULT_COEFF = {"渤页平5": {"liquid": 2.7, "gas_type": "diff", "gas_factor": 0}, "义页1-1VF": {"liquid": 1.37, "gas_type": "multiply", "gas_factor": 403}, "义页1-2HF": {"liquid": 2.4, "gas_type": "multiply", "gas_factor": 1850}};
+const WELLS = ["渤页平5", "义页1-1VF", "义页1-2HF"];
+const TODAY_DATE = new Date().toISOString().split('T')[0];
+
+// ===================== Storage =====================
+function getData() {
+  try { 
+    const raw = localStorage.getItem('oil_data');
+    if (raw === null) return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    return JSON.parse(raw) || {};
+  }
+  catch (e) { return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+}
+function setData(d) { localStorage.setItem('oil_data', JSON.stringify(d)); }
+function getCoeff() {
+  try { return JSON.parse(localStorage.getItem('oil_coeff')) || JSON.parse(JSON.stringify(DEFAULT_COEFF)); }
+  catch (e) { return JSON.parse(JSON.stringify(DEFAULT_COEFF)); }
+}
+function setCoeff(c) { localStorage.setItem('oil_coeff', JSON.stringify(c)); }
+
+// ===================== Utils =====================
+function round2(n) { return Math.round(n * 100) / 100; }
+function round0(n) { return Math.round(n); }
+
+function addDays(dateStr, days) {
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+}
+
+function daysDiff(a, b) {
+  const da = new Date(a + 'T00:00:00');
+  const db = new Date(b + 'T00:00:00');
+  return Math.round((db - da) / (1000 * 60 * 60 * 24));
+}
+
+function calcToday(well, pressure, temp, waterRatio, gasMeter2, prev) {
+  const c = getCoeff()[well];
+  const liquid = round2(pressure * c.liquid);
+  let gas = 0;
+  if (c.gas_type === 'diff') {
+    if (prev && gasMeter2) gas = gasMeter2 - prev.gas_meter_2;
+  } else {
+    gas = round0(pressure * c.gas_factor);
+  }
+  const water = round2(liquid * waterRatio / 100);
+  const oil = round2(liquid - water);
+  const cum_oil = prev ? round2(prev.cum_oil + oil) : oil;
+  const cum_water = prev ? round2(prev.cum_water + water) : water;
+  const cum_gas = prev ? round0(prev.cum_gas + gas) : gas;
+  return { pressure, temp, water_ratio: waterRatio, gas_meter_2: gasMeter2, liquid, oil, water, gas, cum_oil, cum_water, cum_gas };
+}
+
+function recalcAllCumulative(well) {
+  const data = getData();
+  const rows = data[well] || [];
+  if (!rows.length) return;
+  // 按日期排序
+  rows.sort((a, b) => new Date(a.date) - new Date(b.date));
+  // 重新计算 day 和累计
+  let cum_oil = 0, cum_water = 0, cum_gas = 0;
+  for (let i = 0; i < rows.length; i++) {
+    rows[i].day = i + 1;
+    cum_oil = round2(cum_oil + rows[i].oil);
+    cum_water = round2(cum_water + rows[i].water);
+    cum_gas = round0(cum_gas + rows[i].gas);
+    rows[i].cum_oil = cum_oil;
+    rows[i].cum_water = cum_water;
+    rows[i].cum_gas = cum_gas;
+  }
+  data[well] = rows;
+  setData(data);
+}
+
+// ===================== Tabs =====================
+function switchTab(id) {
+  ['history','input','coeff','chart','daily'].forEach(t => {
+    document.getElementById('page-' + t).classList.add('hidden');
+    document.getElementById('tab-' + t).classList.remove('tab-active');
+    document.getElementById('tab-' + t).classList.add('tab-inactive');
+  });
+  document.getElementById('page-' + id).classList.remove('hidden');
+  document.getElementById('tab-' + id).classList.add('tab-active');
+  document.getElementById('tab-' + id).classList.remove('tab-inactive');
+  if (id === 'history') renderHistory();
+  if (id === 'input') renderInput();
+  if (id === 'coeff') renderCoeff();
+  if (id === 'chart') renderChart();
+  if (id === 'daily') renderDaily();
+}
+
+// ===================== History =====================
+let editingWell = null;
+let editingDate = null;
+
+function renderHistory() {
+  const data = getData();
+  const container = document.getElementById('history-cards');
+  container.innerHTML = '';
+  WELLS.forEach(well => {
+    const rows = data[well] || [];
+    // 按日期排序（升序，用于计算日期间隔和累计）
+    rows.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // 检测日期间隔
+    const gaps = [];
+    for (let i = 1; i < rows.length; i++) {
+      const diff = daysDiff(rows[i-1].date, rows[i].date);
+      if (diff > 1) {
+        for (let d = 1; d < diff; d++) {
+          gaps.push({ after: rows[i-1].date, before: rows[i].date, gapDate: addDays(rows[i-1].date, d) });
+        }
+      }
+    }
+    
+    // 检查是否完全没有数据
+    const noData = !rows.length;
+    // 检查最后一条是否早于今天（有间隔）
+    let latestGap = null;
+    if (rows.length) {
+      const lastDate = rows[rows.length - 1].date;
+      const diff = daysDiff(lastDate, TODAY_DATE);
+      if (diff > 1) {
+        for (let d = 1; d < diff; d++) {
+          latestGap = { after: lastDate, gapDate: addDays(lastDate, d) };
+          break; // 只显示最早的缺失
+        }
+      }
+    }
+
+    const gapHtml = gaps.length || latestGap || noData
+      ? `<div class="mb-3 p-2 bg-red-50 border border-red-200 rounded text-sm">
+          <span class="danger font-bold">⚠️ 数据不完整</span>
+          ${noData ? `<p>该井暂无数据，请录入。</p>` : ''}
+          ${gaps.length ? `<p>历史缺失日期：${gaps.map(g => g.gapDate).join(', ')}</p>` : ''}
+          ${latestGap && !gaps.length ? `<p>最后数据 ${latestGap.after} 至今有缺失，请补录。</p>` : ''}
+          <button class="btn btn-sm mt-1" onclick="openFillGap('${well}')">✏️ 补录缺失日期</button>
+        </div>`
+      : '';
+
+    // 展示用降序（最新日期在最上方）
+    const displayRows = [...rows].reverse();
+
+    const html = `<div class="card">
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="font-bold text-gray-800">🔹 ${well}</h3>
+        <button class="btn-sec btn-sm" onclick="exportWellCSV('${well}')">📥 导出CSV</button>
+      </div>
+      ${gapHtml}
+      <div class="overflow-x-auto">
+      <table>
+        <thead>
+          <tr>
+            <th>日期</th><th>压力(MPa)</th><th>液量(t)</th>
+            <th>油量(t)</th><th>水量(t)</th><th>含水(%)</th>
+            <th>气量(m³)</th><th>累计油(t)</th><th>累计水(t)</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${displayRows.map(r => makeHistoryRow(well, r)).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>`;
+    container.innerHTML += html;
+  });
+}
+
+function makeHistoryRow(well, r) {
+  const isEditing = editingWell === well && editingDate === r.date;
+  if (!isEditing) {
+    return `<tr>
+      <td>${r.date}</td>
+      <td>${r.pressure}</td>
+      <td>${r.liquid}</td>
+      <td class="success">${r.oil}</td>
+      <td>${r.water}</td>
+      <td>${r.water_ratio}</td>
+      <td>${r.gas}</td>
+      <td class="info">${r.cum_oil}</td>
+      <td>${r.cum_water}</td>
+      <td>
+        <button class="btn-sec btn-sm" onclick="editRow('${well}', '${r.date}')">✏️</button>
+        <button class="btn-sec btn-sm btn-red" onclick="deleteRow('${well}', '${r.date}')">🗑</button>
+      </td>
+    </tr>`;
+  } else {
+    return `<tr style="background:#eff6ff;">
+      <td><input id="ed_date_${well}" class="input-edit" type="date" value="${r.date}"></td>
+      <td><input id="ed_pressure_${well}" class="input-edit" type="number" step="0.01" value="${r.pressure}"></td>
+      <td><input id="ed_liquid_${well}" class="input-edit" type="number" step="0.01" value="${r.liquid}"></td>
+      <td><input id="ed_oil_${well}" class="input-edit" type="number" step="0.01" value="${r.oil}"></td>
+      <td><input id="ed_water_${well}" class="input-edit" type="number" step="0.01" value="${r.water}"></td>
+      <td><input id="ed_water_ratio_${well}" class="input-edit" type="number" step="0.01" value="${r.water_ratio}"></td>
+      <td><input id="ed_gas_${well}" class="input-edit" type="number" step="1" value="${r.gas}"></td>
+      <td class="info">${r.cum_oil}</td>
+      <td>${r.cum_water}</td>
+      <td>
+        <button class="btn btn-sm" onclick="saveEditRow('${well}', '${r.date}')">✅</button>
+        <button class="btn-sec btn-sm" onclick="cancelEdit()">❌</button>
+      </td>
+    </tr>`;
+  }
+}
+
+function editRow(well, date) {
+  editingWell = well;
+  editingDate = date;
+  renderHistory();
+}
+
+function cancelEdit() {
+  editingWell = null;
+  editingDate = null;
+  renderHistory();
+}
+
+function saveEditRow(well, oldDate) {
+  const data = getData();
+  const rows = data[well] || [];
+  const idx = rows.findIndex(r => r.date === oldDate);
+  if (idx < 0) { cancelEdit(); return; }
+  
+  const newDate = document.getElementById('ed_date_' + well).value;
+  const pressure = parseFloat(document.getElementById('ed_pressure_' + well).value) || 0;
+  const liquid = parseFloat(document.getElementById('ed_liquid_' + well).value) || 0;
+  const oil = parseFloat(document.getElementById('ed_oil_' + well).value) || 0;
+  const water = parseFloat(document.getElementById('ed_water_' + well).value) || 0;
+  const water_ratio = parseFloat(document.getElementById('ed_water_ratio_' + well).value) || 0;
+  const gas = parseFloat(document.getElementById('ed_gas_' + well).value) || 0;
+  
+  // 更新数据
+  rows[idx].date = newDate;
+  rows[idx].pressure = pressure;
+  rows[idx].liquid = liquid;
+  rows[idx].oil = oil;
+  rows[idx].water = water;
+  rows[idx].water_ratio = water_ratio;
+  rows[idx].gas = gas;
+  // 如果日期变了，可能需要重新排序和计算累计
+  data[well] = rows;
+  setData(data);
+  
+  // 重新计算累计和day
+  recalcAllCumulative(well);
+  
+  editingWell = null;
+  editingDate = null;
+  renderHistory();
+  showImportStatus('✅ 已保存修改', 'green');
+}
+
+function deleteRow(well, date) {
+  if (!confirm('确定删除 ' + well + ' ' + date + ' 的数据？')) return;
+  const data = getData();
+  const rows = data[well] || [];
+  data[well] = rows.filter(r => r.date !== date);
+  setData(data);
+  recalcAllCumulative(well);
+  renderHistory();
+  showImportStatus('已删除', 'green');
+}
+
+function openFillGap(well) {
+  const data = getData();
+  const rows = data[well] || [];
+  rows.sort((a, b) => new Date(a.date) - new Date(b.date));
+  
+  let gaps = [];
+  if (!rows.length) {
+    gaps.push(TODAY_DATE);
+  } else {
+    for (let i = 1; i < rows.length; i++) {
+      const diff = daysDiff(rows[i-1].date, rows[i].date);
+      if (diff > 1) {
+        for (let d = 1; d < diff; d++) gaps.push(addDays(rows[i-1].date, d));
+      }
+    }
+    const lastDate = rows[rows.length - 1].date;
+    const diff = daysDiff(lastDate, TODAY_DATE);
+    if (diff > 1) {
+      for (let d = 1; d < diff; d++) gaps.push(addDays(lastDate, d));
+    }
+  }
+  
+  if (!gaps.length) { alert('该井数据已完整，无需补录'); return; }
+  
+  const gapDate = gaps[0];
+  // 切换到录入页，预设日期为缺失日期
+  switchTab('input');
+  // 设置该井的日期为 gapDate
+  const dateInput = document.getElementById('inp_date_' + well);
+  if (dateInput) dateInput.value = gapDate;
+}
+
+function exportWellCSV(well) {
+  const data = getData();
+  const rows = data[well] || [];
+  if (!rows.length) return;
+  const headers = ['日期','压力(MPa)','出液温度(℃)','液量(t)','油量(t)','水量(t)','含水(%)','气量(m³)','累计油(t)','累计水(t)','累计气(m³)'];
+  const lines = [headers.join(',')];
+  rows.forEach(r => {
+    lines.push([r.date, r.pressure, r.temp, r.liquid, r.oil, r.water, r.water_ratio, r.gas, r.cum_oil, r.cum_water, r.cum_gas].join(','));
+  });
+  downloadCSV(lines.join('\n'), `oil_report_${well}_${TODAY_DATE}.csv`);
+}
+
+function exportHistoryCSV() {
+  const data = getData();
+  const headers = ['井号','日期','压力(MPa)','出液温度(℃)','液量(t)','油量(t)','水量(t)','含水(%)','气量(m³)','累计油(t)','累计水(t)','累计气(m³)'];
+  const lines = [headers.join(',')];
+  WELLS.forEach(well => {
+    (data[well] || []).forEach(r => {
+      lines.push([well, r.date, r.pressure, r.temp, r.liquid, r.oil, r.water, r.water_ratio, r.gas, r.cum_oil, r.cum_water, r.cum_gas].join(','));
+    });
+  });
+  downloadCSV(lines.join('\n'), `oil_report_all_${TODAY_DATE}.csv`);
+}
+
+function downloadCSV(content, filename) {
+  const blob = new Blob(["\uFEFF" + content], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
+
+// ===================== Input =====================
+let previewRecords = {};
+
+function renderInput() {
+  const data = getData();
+  const container = document.getElementById('input-cards');
+  container.innerHTML = '';
+  previewRecords = {};
+  const coeff = getCoeff();
+
+  WELLS.forEach(well => {
+    const prev = data[well] && data[well].length ? data[well][data[well].length - 1] : null;
+    const defaultDate = prev ? addDays(prev.date, 1) : TODAY_DATE;
+    const defaults = {
+      "渤页平5": { temp: 22, water: 60.23 },
+      "义页1-1VF": { temp: 18, water: 60.88 },
+      "义页1-2HF": { temp: 28, water: 85.83 }
+    };
+    const df = defaults[well];
+    const c = coeff[well];
+    const formula = `液量 = 压力 × ${c.liquid}` + (c.gas_type === 'diff' ? ' / 气量 = 气表差' : ` / 气量 = 压力 × ${c.gas_factor}`);
+
+    const html = `<div class="card">
+      <h3 class="font-bold text-gray-800 mb-2">${well}</h3>
+      <p class="text-xs text-gray-500 mb-2">${formula}</p>
+      <label class="block text-sm text-gray-600 mb-1">日期</label>
+      <input id="inp_date_${well}" class="input mb-2" type="date" value="${defaultDate}">
+      <label class="block text-sm text-gray-600 mb-1">井口压力 (MPa)</label>
+      <input id="inp_pressure_${well}" class="input mb-2" type="number" step="0.01" value="" oninput="calcInput('${well}')">
+      <label class="block text-sm text-gray-600 mb-1">出液温度 (°C)</label>
+      <input id="inp_temp_${well}" class="input mb-2" type="number" step="0.1" value="${df.temp}">
+      <label class="block text-sm text-gray-600 mb-1">综合含水 (%)</label>
+      <input id="inp_water_${well}" class="input mb-2" type="number" step="0.01" value="${df.water}" oninput="calcInput('${well}')">
+      ${well === '渤页平5' ? `<label class="block text-sm text-gray-600 mb-1">气表2累计读数</label><input id="inp_gas_${well}" class="input mb-2" type="number" step="1" value="" oninput="calcInput('${well}')">` : ''}
+      <div id="result_${well}" class="mt-2 p-2 bg-blue-50 rounded text-sm hidden">
+        <div>液量: <span class="info" id="res_liquid_${well}">--</span> t</div>
+        <div>产油: <span class="success" id="res_oil_${well}">--</span> t</div>
+        <div>产水: <span id="res_water_${well}">--</span> t</div>
+        <div>气量: <span id="res_gas_${well}">--</span> m³</div>
+        <div class="mt-1 text-xs text-gray-500">累计油: <span id="res_cumo_${well}">--</span> t</div>
+      </div>
+    </div>`;
+    container.innerHTML += html;
+  });
+  document.getElementById('today-badge').textContent = '今天是 ' + TODAY_DATE;
+}
+
+function calcInput(well) {
+  const data = getData();
+  const date = document.getElementById('inp_date_' + well).value;
+  // 找到该日期之前的最新记录作为 prev
+  const rows = data[well] || [];
+  rows.sort((a, b) => new Date(a.date) - new Date(b.date));
+  let prev = null;
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (rows[i].date < date) { prev = rows[i]; break; }
+  }
+  
+  const pressure = parseFloat(document.getElementById('inp_pressure_' + well).value) || 0;
+  const temp = parseFloat(document.getElementById('inp_temp_' + well).value) || 0;
+  const waterRatio = parseFloat(document.getElementById('inp_water_' + well).value) || 0;
+  let gasMeter2 = null;
+  if (well === '渤页平5') {
+    gasMeter2 = parseFloat(document.getElementById('inp_gas_' + well).value) || 0;
+  }
+  if (!pressure) {
+    document.getElementById('result_' + well).classList.add('hidden');
+    return;
+  }
+  const res = calcToday(well, pressure, temp, waterRatio, gasMeter2, prev);
+  previewRecords[well] = res;
+  document.getElementById('result_' + well).classList.remove('hidden');
+  document.getElementById('res_liquid_' + well).textContent = res.liquid;
+  document.getElementById('res_oil_' + well).textContent = res.oil;
+  document.getElementById('res_water_' + well).textContent = res.water;
+  document.getElementById('res_gas_' + well).textContent = res.gas;
+  document.getElementById('res_cumo_' + well).textContent = res.cum_oil;
+}
+
+function previewToday() {
+  const area = document.getElementById('preview-area');
+  if (!Object.keys(previewRecords).length) { area.classList.add('hidden'); return; }
+  let html = '<h3 class="font-bold mb-2">今日报表预览</h3><table><thead><tr><th>井号</th><th>日期</th><th>压力</th><th>液量</th><th>油量</th><th>水量</th><th>含水%</th><th>气量</th><th>累计油</th></tr></thead><tbody>';
+  WELLS.forEach(well => {
+    const r = previewRecords[well];
+    if (!r) return;
+    const date = document.getElementById('inp_date_' + well).value;
+    html += `<tr><td class="font-bold">${well}</td><td>${date}</td><td>${r.pressure}</td><td>${r.liquid}</td><td class="success">${r.oil}</td><td>${r.water}</td><td>${r.water_ratio}</td><td>${r.gas}</td><td class="info">${r.cum_oil}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  html += `<button class="btn mt-2" onclick="downloadPreviewCSV()">📥 下载今日CSV</button>`;
+  area.innerHTML = html;
+  area.classList.remove('hidden');
+}
+
+function downloadPreviewCSV() {
+  if (!Object.keys(previewRecords).length) return;
+  const headers = ['井号','日期','压力(MPa)','出液温度(℃)','液量(t)','油量(t)','水量(t)','含水(%)','气量(m³)','累计油(t)','累计水(t)','累计气(m³)'];
+  const lines = [headers.join(',')];
+  WELLS.forEach(well => {
+    const r = previewRecords[well]; if (!r) return;
+    const date = document.getElementById('inp_date_' + well).value;
+    lines.push([well, date, r.pressure, r.temp, r.liquid, r.oil, r.water, r.water_ratio, r.gas, r.cum_oil, r.cum_water, r.cum_gas].join(','));
+  });
+  downloadCSV(lines.join('\n'), `oil_report_today_${TODAY_DATE}.csv`);
+}
+
+function saveToday() {
+  const data = getData();
+  let saved = false;
+  WELLS.forEach(well => {
+    const pressure = parseFloat(document.getElementById('inp_pressure_' + well).value) || 0;
+    if (!pressure) return;
+    const date = document.getElementById('inp_date_' + well).value;
+    const temp = parseFloat(document.getElementById('inp_temp_' + well).value) || 0;
+    const waterRatio = parseFloat(document.getElementById('inp_water_' + well).value) || 0;
+    let gasMeter2 = null;
+    if (well === '渤页平5') {
+      gasMeter2 = parseFloat(document.getElementById('inp_gas_' + well).value) || 0;
+    }
+    // 找到 prev
+    const rows = data[well] || [];
+    rows.sort((a, b) => new Date(a.date) - new Date(b.date));
+    let prev = null;
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (rows[i].date < date) { prev = rows[i]; break; }
+    }
+    const res = calcToday(well, pressure, temp, waterRatio, gasMeter2, prev);
+    const record = { date, ...res };
+    if (!data[well]) data[well] = [];
+    // 替换相同日期的记录，或追加
+    const existing = data[well].findIndex(r => r.date === date);
+    if (existing >= 0) {
+      data[well][existing] = record;
+    } else {
+      data[well].push(record);
+    }
+    saved = true;
+  });
+  if (saved) {
+    setData(data);
+    // 重新计算所有累计
+    WELLS.forEach(well => recalcAllCumulative(well));
+    alert('✅ 保存成功！');
+    previewRecords = {};
+    document.getElementById('preview-area').classList.add('hidden');
+    renderInput();
+  } else {
+    alert('请先输入井口压力');
+  }
+}
+
+// ===================== Coeff =====================
+function renderCoeff() {
+  const coeff = getCoeff();
+  const container = document.getElementById('coeff-cards');
+  container.innerHTML = '';
+  WELLS.forEach(well => {
+    const c = coeff[well];
+    const html = `<div class="card">
+      <h3 class="font-bold text-gray-800 mb-2">${well}</h3>
+      <label class="block text-sm text-gray-600 mb-1">液量系数</label>
+      <input id="coeff_liquid_${well}" class="input mb-2" type="number" step="0.01" value="${c.liquid}">
+      <label class="block text-sm text-gray-600 mb-1">气量计算方式</label>
+      <select id="coeff_gas_type_${well}" class="input mb-2" onchange="toggleGasFactor('${well}')">
+        <option value="multiply" ${c.gas_type === 'multiply' ? 'selected' : ''}>压力 × 系数</option>
+        <option value="diff" ${c.gas_type === 'diff' ? 'selected' : ''}>气表差</option>
+      </select>
+      <div id="gas_factor_wrap_${well}" style="${c.gas_type === 'diff' ? 'display:none' : ''}">
+        <label class="block text-sm text-gray-600 mb-1">气量系数</label>
+        <input id="coeff_gas_factor_${well}" class="input mb-2" type="number" step="1" value="${c.gas_factor}">
+      </div>
+    </div>`;
+    container.innerHTML += html;
+  });
+}
+
+function toggleGasFactor(well) {
+  const type = document.getElementById('coeff_gas_type_' + well).value;
+  document.getElementById('gas_factor_wrap_' + well).style.display = type === 'diff' ? 'none' : 'block';
+}
+
+function saveCoeff() {
+  const newCoeff = {};
+  WELLS.forEach(well => {
+    newCoeff[well] = {
+      liquid: parseFloat(document.getElementById('coeff_liquid_' + well).value) || 0,
+      gas_type: document.getElementById('coeff_gas_type_' + well).value,
+      gas_factor: parseFloat(document.getElementById('coeff_gas_factor_' + well).value) || 0
+    };
+  });
+  setCoeff(newCoeff);
+  alert('✅ 系数已保存为默认！');
+  renderInput();
+}
+
+function resetCoeff() {
+  if (confirm('确定恢复初始系数？当前修改会丢失。')) {
+    setCoeff(JSON.parse(JSON.stringify(DEFAULT_COEFF)));
+    renderCoeff();
+    renderInput();
+    alert('已恢复初始系数');
+  }
+}
+
+// ===================== Chart =====================
+function renderChart() {
+  const data = getData();
+  const area = document.getElementById('chart-area');
+  area.innerHTML = '';
+  WELLS.forEach(well => {
+    const rows = data[well] || [];
+    if (!rows.length) return;
+    rows.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const id = 'chart_' + well.replace(/[^a-zA-Z0-9]/g, '_');
+    const html = `<div class="card">
+      <h3 class="font-bold text-gray-800 mb-2">${well}</h3>
+      <div style="height:300px"><canvas id="${id}"></canvas></div>
+      <div class="mt-2 flex gap-4 text-sm">
+        <span>最新日产油: <span class="success">${rows[rows.length-1].oil}t</span></span>
+        <span>最新日产液: <span class="info">${rows[rows.length-1].liquid}t</span></span>
+        <span>含水率: <span class="warn">${rows[rows.length-1].water_ratio}%</span></span>
+      </div>
+    </div>`;
+    area.innerHTML += html;
+    setTimeout(() => drawChart(id, rows), 10);
+  });
+}
+
+function drawChart(id, rows) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  const labels = rows.map(r => r.date.slice(5));
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: '日产油(t)', data: rows.map(r => r.oil), borderColor: '#16a34a', tension: 0.1, fill: false },
+        { label: '日产液(t)', data: rows.map(r => r.liquid), borderColor: '#2563eb', tension: 0.1, fill: false },
+        { label: '日产水(t)', data: rows.map(r => r.water), borderColor: '#d97706', tension: 0.1, fill: false }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
+function resetToDefault() {
+  if (confirm('确定恢复为示例数据？当前数据会丢失。')) {
+    setData(JSON.parse(JSON.stringify(DEFAULT_DATA)));
+    setCoeff(JSON.parse(JSON.stringify(DEFAULT_COEFF)));
+    renderHistory();
+    showImportStatus('已恢复示例数据', 'green');
+  }
+}
+
+function clearAllData() {
+  if (confirm('⚠️ 确定清空全部数据？此操作不可恢复！')) {
+    localStorage.setItem('oil_data', '{}');
+    localStorage.removeItem('oil_coeff');
+    renderHistory();
+    showImportStatus('已清空全部数据', 'red');
+  }
+}
+
+function showImportStatus(msg, color) {
+  const el = document.getElementById('import-status');
+  el.textContent = msg;
+  el.className = 'text-sm mt-2 font-bold';
+  el.style.color = color === 'green' ? '#16a34a' : (color === 'red' ? '#dc2626' : '#2563eb');
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+function exportJSON() {
+  const data = getData();
+  const coeff = getCoeff();
+  const backup = { version: 1, export_date: new Date().toISOString(), coeff: coeff, data: data };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `oil_backup_${TODAY_DATE}.json`;
+  link.click();
+}
+
+function importJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const backup = JSON.parse(e.target.result);
+      if (backup.data) {
+        setData(backup.data);
+        if (backup.coeff) setCoeff(backup.coeff);
+        renderHistory();
+        showImportStatus(`✅ JSON导入成功！`, 'green');
+      } else {
+        showImportStatus('❌ JSON格式错误：缺少 data 字段', 'red');
+      }
+    } catch (err) {
+      showImportStatus('❌ JSON解析失败：' + err.message, 'red');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function importCSV(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const text = e.target.result;
+      const lines = text.split('\n').filter(l => l.trim());
+      if (lines.length < 2) { showImportStatus('❌ CSV 数据行不足', 'red'); return; }
+      const newData = { "渤页平5": [], "义页1-1VF": [], "义页1-2HF": [] };
+      for (let i = 1; i < lines.length; i++) {
+        const parts = lines[i].split(',');
+        if (parts.length < 10) continue;
+        const well = parts[0].trim();
+        if (!newData[well]) continue;
+        const row = {
+          date: parts[1].trim(), pressure: parseFloat(parts[2]) || 0, temp: parseFloat(parts[3]) || 0,
+          liquid: parseFloat(parts[4]) || 0, oil: parseFloat(parts[5]) || 0, water: parseFloat(parts[6]) || 0,
+          water_ratio: parseFloat(parts[7]) || 0, gas: parseInt(parts[8]) || 0,
+          cum_oil: parseFloat(parts[9]) || 0, cum_water: parseFloat(parts[10]) || 0, cum_gas: parseInt(parts[11]) || 0
+        };
+        newData[well].push(row);
+      }
+      const current = getData();
+      WELLS.forEach(well => {
+        if (!current[well]) current[well] = [];
+        const existingKeys = new Set(current[well].map(r => r.date));
+        (newData[well] || []).forEach(r => {
+          if (!existingKeys.has(r.date)) current[well].push(r);
+        });
+        current[well].sort((a, b) => new Date(a.date) - new Date(b.date));
+      });
+      setData(current);
+      WELLS.forEach(well => recalcAllCumulative(well));
+      renderHistory();
+      showImportStatus('✅ CSV导入成功！已合并去重', 'green');
+    } catch (err) {
+      showImportStatus('❌ CSV解析失败：' + err.message, 'red');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+
+// ===================== Daily Report =====================
+function renderDaily() {
+  const data = getData();
+  const dateInput = document.getElementById('daily-date');
+  if (!dateInput.value) {
+    let latestDate = '';
+    WELLS.forEach(w => {
+      if (data[w] && data[w].length) {
+        const d = data[w][data[w].length - 1].date;
+        if (d > latestDate) latestDate = d;
+      }
+    });
+    dateInput.value = latestDate || TODAY_DATE;
+  }
+  const selectedDate = dateInput.value;
+  const container = document.getElementById('daily-report-area');
+  
+  const dailyData = {};
+  const prevData = {};
+  WELLS.forEach(well => {
+    const rows = data[well] || [];
+    rows.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const idx = rows.findIndex(r => r.date === selectedDate);
+    if (idx >= 0) {
+      dailyData[well] = rows[idx];
+      prevData[well] = idx > 0 ? rows[idx - 1] : null;
+    }
+  });
+  
+  if (!Object.keys(dailyData).length) {
+    container.innerHTML = `<div class="text-center p-8 text-gray-500">
+      <p class="text-lg">📭 该日期暂无数据</p>
+      <p class="text-sm mt-2">请先在"录入今日数据"页面添加数据，或选择其他日期。</p>
+    </div>`;
+    return;
+  }
+  
+  function calcChange(curr, prev, key) {
+    if (!prev || !curr) return { val: 0, pct: 0, icon: '−', cls: 'text-gray-400' };
+    const diff = round2(curr[key] - prev[key]);
+    const pct = prev[key] ? round2(diff / prev[key] * 100) : 0;
+    const up = diff > 0;
+    const icon = diff > 0 ? '↑' : (diff < 0 ? '↓' : '−');
+    let cls = 'text-gray-400';
+    if (key === 'oil') { cls = up ? 'success' : (diff < 0 ? 'danger' : 'text-gray-400'); }
+    else if (key === 'water') { cls = up ? 'danger' : (diff < 0 ? 'success' : 'text-gray-400'); }
+    else if (key === 'pressure') { cls = up ? 'info' : (diff < 0 ? 'warn' : 'text-gray-400'); }
+    else { cls = up ? 'info' : (diff < 0 ? 'warn' : 'text-gray-400'); }
+    return { val: diff, pct: pct, icon: icon, cls: cls };
+  }
+  
+  let summaryHtml = `<div class="mb-6">
+    <h3 class="font-bold text-gray-800 mb-3 text-lg">📊 今日汇总对比（${selectedDate}）</h3>
+    <div class="overflow-x-auto">
+    <table class="border border-gray-200">
+      <thead><tr><th class="text-center">指标</th>${WELLS.map(w => `<th class="text-center">${w}</th>`).join('')}</tr></thead>
+      <tbody>
+        <tr><td class="font-semibold">井口压力 (MPa)</td>${WELLS.map(w => {
+          const r = dailyData[w]; const p = prevData[w]; const c = calcChange(r, p, 'pressure');
+          return `<td class="text-center">${r?r.pressure:'−'} <span class="${c.cls} text-xs">${c.icon}${Math.abs(c.val)} (${c.icon}${Math.abs(c.pct)}%)</span></td>`;
+        }).join('')}</tr>
+        <tr><td class="font-semibold">日产液 (t)</td>${WELLS.map(w => {
+          const r = dailyData[w]; const p = prevData[w]; const c = calcChange(r, p, 'liquid');
+          return `<td class="text-center">${r?r.liquid:'−'} <span class="${c.cls} text-xs">${c.icon}${Math.abs(c.val)} (${c.icon}${Math.abs(c.pct)}%)</span></td>`;
+        }).join('')}</tr>
+        <tr><td class="font-semibold text-green-700">日产油 (t)</td>${WELLS.map(w => {
+          const r = dailyData[w]; const p = prevData[w]; const c = calcChange(r, p, 'oil');
+          return `<td class="text-center font-bold success">${r?r.oil:'−'} <span class="${c.cls} text-xs">${c.icon}${Math.abs(c.val)} (${c.icon}${Math.abs(c.pct)}%)</span></td>`;
+        }).join('')}</tr>
+        <tr><td class="font-semibold">日产水 (t)</td>${WELLS.map(w => {
+          const r = dailyData[w]; const p = prevData[w]; const c = calcChange(r, p, 'water');
+          return `<td class="text-center">${r?r.water:'−'} <span class="${c.cls} text-xs">${c.icon}${Math.abs(c.val)} (${c.icon}${Math.abs(c.pct)}%)</span></td>`;
+        }).join('')}</tr>
+        <tr><td class="font-semibold">含水 (%)</td>${WELLS.map(w => `<td class="text-center">${dailyData[w]?dailyData[w].water_ratio:'−'}</td>`).join('')}</tr>
+        <tr><td class="font-semibold">气量 (m³)</td>${WELLS.map(w => {
+          const r = dailyData[w]; const p = prevData[w]; const c = calcChange(r, p, 'gas');
+          return `<td class="text-center">${r?r.gas:'−'} <span class="${c.cls} text-xs">${c.icon}${Math.abs(c.val)}</span></td>`;
+        }).join('')}</tr>
+        <tr><td class="font-semibold">累计油 (t)</td>${WELLS.map(w => `<td class="text-center info">${dailyData[w]?dailyData[w].cum_oil:'−'}</td>`).join('')}</tr>
+      </tbody>
+    </table>
+    </div>
+  </div>`;
+  
+  let detailHtml = `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">`;
+  WELLS.forEach(well => {
+    const r = dailyData[well]; if (!r) return;
+    const p = prevData[well];
+    const co = calcChange(r, p, 'oil'); const cl = calcChange(r, p, 'liquid');
+    const cw = calcChange(r, p, 'water'); const cpr = calcChange(r, p, 'pressure');
+    const allRows = data[well] || [];
+    allRows.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const idx = allRows.findIndex(row => row.date === selectedDate);
+    const recent7 = idx >= 0 ? allRows.slice(Math.max(0, idx - 6), idx + 1) : allRows.slice(-7);
+    
+    detailHtml += `<div class="card border-blue-100">
+      <h4 class="font-bold text-gray-800 mb-2 border-b pb-1">🔹 ${well}</h4>
+      <div class="space-y-1 text-sm">
+        <div class="flex justify-between"><span class="text-gray-600">井口压力</span><span class="font-semibold">${r.pressure} MPa <span class="${cpr.cls} text-xs">${cpr.icon}${Math.abs(cpr.val)}</span></span></div>
+        <div class="flex justify-between"><span class="text-gray-600">出液温度</span><span class="font-semibold">${r.temp} ℃</span></div>
+        <div class="flex justify-between"><span class="text-gray-600">日产液</span><span class="font-semibold">${r.liquid} t <span class="${cl.cls} text-xs">${cl.icon}${Math.abs(cl.val)}</span></span></div>
+        <div class="flex justify-between"><span class="text-gray-600 text-green-700">日产油</span><span class="font-bold success">${r.oil} t <span class="${co.cls} text-xs">${co.icon}${Math.abs(co.val)} (${co.icon}${Math.abs(co.pct)}%)</span></span></div>
+        <div class="flex justify-between"><span class="text-gray-600">日产水</span><span class="font-semibold">${r.water} t <span class="${cw.cls} text-xs">${cw.icon}${Math.abs(cw.val)}</span></span></div>
+        <div class="flex justify-between"><span class="text-gray-600">含水率</span><span class="font-semibold">${r.water_ratio}%</span></div>
+        <div class="flex justify-between"><span class="text-gray-600">气量</span><span class="font-semibold">${r.gas} m³</span></div>
+        <div class="flex justify-between"><span class="text-gray-600">累计油</span><span class="font-semibold info">${r.cum_oil} t</span></div>
+        <div class="flex justify-between"><span class="text-gray-600">累计水</span><span class="font-semibold">${r.cum_water} t</span></div>
+        <div class="flex justify-between"><span class="text-gray-600">累计气</span><span class="font-semibold">${r.cum_gas} m³</span></div>
+      </div>
+      <div class="mt-3" style="height:120px">
+        <canvas id="daily_chart_${well.replace(/[^a-zA-Z0-9]/g, '_')}"></canvas>
+      </div>
+    </div>`;
+    
+    setTimeout(() => {
+      const ctx = document.getElementById('daily_chart_' + well.replace(/[^a-zA-Z0-9]/g, '_'));
+      if (!ctx) return;
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: recent7.map(r => r.date.slice(5)),
+          datasets: [
+            { label: '油(t)', data: recent7.map(r => r.oil), borderColor: '#16a34a', tension: 0.3, pointRadius: 2, borderWidth: 1.5 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { x: { ticks: { font: { size: 9 } }, grid: { display: false } }, y: { ticks: { font: { size: 9 } }, grid: { color: '#f3f4f6' } } }
+        }
+      });
+    }, 50);
+  });
+  detailHtml += `</div>`;
+  
+  const noteKey = 'daily_note_' + selectedDate;
+  const savedNote = localStorage.getItem(noteKey) || '';
+  detailHtml += `<div class="card bg-gray-50 mt-4">
+    <h4 class="font-bold text-gray-800 mb-2">📝 日报备注</h4>
+    <textarea id="daily-note" class="input" rows="3" placeholder="填写今日生产备注、异常情况、工作安排等..." onblur="saveDailyNote()">${savedNote}</textarea>
+    <p class="text-xs text-gray-500 mt-1">备注自动保存，仅保存在本地浏览器。</p>
+  </div>`;
+  
+  container.innerHTML = summaryHtml + detailHtml;
+}
+
+function saveDailyNote() {
+  const date = document.getElementById('daily-date').value;
+  const note = document.getElementById('daily-note').value;
+  if (date) localStorage.setItem('daily_note_' + date, note);
+}
+
+async function exportDailyPDF() {
+  const area = document.getElementById('daily-report-area');
+  if (!area || area.innerHTML.includes('暂无数据')) { alert('请先生成日报'); return; }
+  const { jsPDF } = window.jspdf;
+  const canvas = await html2canvas(area, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+  const imgData = canvas.toDataURL('image/png');
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const imgWidth = pageWidth - 20;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  let heightLeft = imgHeight, position = 10;
+  pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+  heightLeft -= (pageHeight - 20);
+  while (heightLeft > 0) {
+    position = heightLeft - imgHeight + 10;
+    pdf.addPage();
+    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+    heightLeft -= (pageHeight - 20);
+  }
+  pdf.save(`oil_daily_report_${document.getElementById('daily-date').value}.pdf`);
+}
+
+async function exportDailyPNG() {
+  const area = document.getElementById('daily-report-area');
+  if (!area || area.innerHTML.includes('暂无数据')) { alert('请先生成日报'); return; }
+  const canvas = await html2canvas(area, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+  const link = document.createElement('a');
+  link.href = canvas.toDataURL('image/png');
+  link.download = `oil_daily_report_${document.getElementById('daily-date').value}.png`;
+  link.click();
+}
+
+// ===================== Init =====================
+window.onload = function() {
+  if (!localStorage.getItem('oil_data')) {
+    setData(JSON.parse(JSON.stringify(DEFAULT_DATA)));
+  }
+  if (!localStorage.getItem('oil_coeff')) {
+    setCoeff(JSON.parse(JSON.stringify(DEFAULT_COEFF)));
+  }
+  renderHistory();
+  switchTab('history');
+};
+</script>
+</body>
+</html>
