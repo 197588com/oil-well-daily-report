@@ -23,6 +23,7 @@ oil_well_app/
 ├── backend.py              # Flask + SQLite 后端 API
 ├── main_windows.py         # Windows 桌面启动器 (pywebview)
 ├── main_android.py         # Android 启动器 (Kivy + WebView)
+├── main.py                 # Android 入口（webview bootstrap）
 ├── build_windows.py        # Windows 打包脚本 (PyInstaller)
 ├── buildozer.spec          # Android 打包配置 (Buildozer)
 ├── requirements.txt        # Python 依赖列表
@@ -38,7 +39,7 @@ oil_well_app/
 |------|---------|---------|
 | 后端 | Flask + SQLite | Flask + SQLite |
 | 前端 | HTML5 + Tailwind CSS + Chart.js | HTML5 + Tailwind CSS + Chart.js |
-| 窗口 | pywebview | Kivy + jnius WebView |
+| 窗口 | pywebview | WebView (python-for-android webview bootstrap) |
 | 打包 | PyInstaller | Buildozer |
 
 ## 一、Windows 单文件版
@@ -79,10 +80,12 @@ pyinstaller --onefile --windowed --add-data "templates;templates" --add-data "st
 ### 2.1 环境准备
 
 #### 系统要求
-- Python 3.8+
-- 操作系统：Linux 推荐（Windows 可用 WSL2）
+- Python 3.9+
+- 操作系统：macOS / Linux 推荐（Windows 可用 WSL2）
 - 至少 10GB 磁盘空间
 - 8GB+ 内存
+- Java JDK 17
+- Android SDK + NDK r25b
 
 #### 安装依赖
 
@@ -90,13 +93,34 @@ pyinstaller --onefile --windowed --add-data "templates;templates" --add-data "st
 pip install buildozer cython
 ```
 
-#### 安装 Android SDK/NDK（可选）
+#### 配置环境变量
 
-Buildozer 可以自动下载，但首次下载需要较长时间。
+```bash
+export JAVA_HOME="/path/to/jdk-17"
+export ANDROIDSDK="/path/to/android-sdk"
+export ANDROIDNDK="/path/to/android-ndk-r25b"
+```
 
-### 2.2 配置 buildozer.spec
+### 2.2 构建 APK
 
-已包含在项目根目录，关键配置项：
+使用 webview bootstrap（无需 Kivy，体积更小）：
+
+```bash
+cd oil_well_app
+buildozer android debug
+```
+
+构建完成后，APK 位于 `bin/` 目录：
+- `oilwellreport-1.0.0-armeabi-v7a_arm64-v8a-debug.apk`
+
+#### 部署到设备
+
+```bash
+# 构建并部署到已连接的 Android 设备
+buildozer android debug deploy run
+```
+
+### 2.3 构建配置（buildozer.spec 关键项）
 
 ```ini
 [app]
@@ -105,83 +129,37 @@ package.name = oilwellreport
 package.domain = com.yourcompany
 version = 1.0.0
 
+p4a.bootstrap = webview
+requirements = python3,flask,flask-cors,sqlite3,pyjnius,urllib3,charset_normalizer,idna,certifi,requests,click,itsdangerous,jinja2,markupsafe,werkzeug
+
 android.api = 33
 android.minapi = 21
 android.archs = armeabi-v7a, arm64-v8a
-
 android.permissions = INTERNET, ACCESS_NETWORK_STATE
-android.fullscreen = 1
-
-requirements = python3,flask,flask-cors,sqlite3,jnius,pyjnius,urllib3,charset_normalizer,idna,certifi,requests,click,itsdangerous,jinja2,markupsafe,werkzeug
-
-p4a.bootstrap = sdl2
-```
-
-### 2.3 构建 APK
-
-#### 调试版（Debug）
-
-```bash
-cd oil_well_app
-buildozer android debug
-```
-
-构建完成后，APK 位于 `.buildozer/android/platform/build-arm64-v8a_armeabi-v7a/dists/oilwellreport/bin/` 目录。
-
-#### 构建并部署到设备
-
-```bash
-# 构建
-cd oil_well_app
-buildozer android debug
-
-# 部署到已连接的 Android 设备
-buildozer android deploy
-
-# 部署并运行
-buildozer android deploy run
-```
-
-#### 完整日志
-
-```bash
-buildozer android debug deploy run logcat
+android.orientation = landscape
 ```
 
 ### 2.4 常见问题
 
 #### 首次构建失败
 
-首次构建会自动下载 Android SDK、NDK、Gradle 等工具，需要很长时间。如果下载失败，可以手动配置：
+首次构建会自动下载 Gradle 等工具，需要较长时间。如果因网络问题失败，可重试：
 
 ```bash
-# 设置环境变量（在 .bashrc 或 .zshrc 中）
-export ANDROIDSDK="$HOME/.buildozer/android/platform/android-sdk"
-export ANDROIDNDK="$HOME/.buildozer/android/platform/android-ndk-r25b"
+buildozer android clean
+buildozer android debug
 ```
 
-#### 内存不足
+#### macOS 构建注意事项
 
-如果构建时出现内存不足错误，增加交换空间：
+macOS 上构建 Android APK 需要：
+- 从源码编译 autoconf 2.71+（`~/.local/bin`）
+- 从源码编译 automake 1.16+（`~/.local/bin`）
+- 从源码编译 libtool 2.4+（`~/.local/bin`）
+- 从源码编译 OpenSSL 3.x（`~/.local`）
+- 修改 python-for-android 源码以使用本地工具链
 
-```bash
-sudo fallocate -l 4G /swapfile
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
-```
-
-#### 设备连接失败
-
-确保设备已开启 USB 调试模式：
-1. 设置 → 关于手机 → 连续点击"版本号"7次开启开发者模式
-2. 设置 → 系统 → 开发者选项 → 开启 USB 调试
-3. 连接电脑后允许调试授权
-
-验证连接：
-```bash
-adb devices
-```
+详见构建历史记录（`buildozer.log`）。
 
 ## 三、开发运行（测试模式）
 
@@ -193,14 +171,12 @@ python backend.py
 # 访问 http://localhost:5000
 ```
 
-### 3.2 桌面 Kivy 测试（Android 代码桌面测试）
+### 3.2 桌面 webview 测试
 
 ```bash
 cd oil_well_app
-python main_android.py
+python main_windows.py
 ```
-
-这会在桌面启动 Flask 服务器，并尝试打开 webview（如果安装了 pywebview）。
 
 ## 四、数据库说明
 
@@ -244,7 +220,16 @@ python main_android.py
 5. 点击"📰 日报生成"生成对比日报并导出 PDF/PNG
 6. 点击"🏗️ 井名管理"添加或删除油井
 
-## 七、更新日志
+## 七、自动构建
+
+本项目已配置 GitHub Actions 自动构建：
+
+- **Windows 可执行文件**：每次推送标签时自动构建 `.exe` 并上传 Release
+- 工作流定义：`.github/workflows/build.yml`
+
+手动触发构建：在 GitHub 仓库页面 → Actions → Build Windows Executable → Run workflow
+
+## 八、更新日志
 
 ### v1.0.0
 - 支持历史报表编辑、删除、补录
@@ -253,7 +238,8 @@ python main_android.py
 - 支持自定义井名（添加/删除）
 - 本地 SQLite 数据库存储
 - 支持 Windows 单文件 exe 和 Android APK
+- Android 使用 webview bootstrap（无需 Kivy，更轻量）
 
-## 八、开源协议
+## 九、开源协议
 
 MIT License
