@@ -199,6 +199,19 @@ def save_data():
     conn.close()
     return jsonify({'success': True})
 
+@app.route('/api/clear', methods=['POST'])
+def clear_data():
+    """清空所有数据（用于前端"清空全部数据"功能）"""
+    conn = get_db()
+    c = conn.cursor()
+    c.execute('DELETE FROM well_data')
+    c.execute('DELETE FROM well_coeff')
+    c.execute('DELETE FROM well_names')
+    c.execute('DELETE FROM daily_notes')
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
+
 @app.route('/api/well', methods=['POST'])
 def add_well():
     payload = request.json
