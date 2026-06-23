@@ -26,6 +26,15 @@ source.include_exts = py,html,css,js,png,jpg,jpeg,ttf,txt,db
 # 版本号
 version = 1.0.0
 
+# (str) Android SDK 路径（留空则自动下载）
+android.sdk_path = /Users/yanglin/Library/Android/sdk
+
+# (str) Android NDK 路径（留空则自动下载）
+android.ndk_path = /Users/yanglin/Library/Android/sdk/ndk
+
+# (str) Python for android branch to use
+p4a.branch = develop
+
 # 最低 Android API 级别
 # Android 8.0+ (API 26)
 android.api = 33
@@ -67,15 +76,17 @@ android.logcat_filters = *:S python:D
 android.archs = armeabi-v7a, arm64-v8a
 
 # 额外依赖（Python 库）
-requirements = python3,flask,flask-cors,sqlite3,jnius,pyjnius,urllib3,charset_normalizer,idna,certifi,requests,click,itsdangerous,jinja2,markupsafe,werkzeug
+requirements = python3,flask,flask-cors,sqlite3,pyjnius,urllib3,charset_normalizer,idna,certifi,requests,click,itsdangerous,jinja2,markupsafe,werkzeug
 
-# WebView 引导配置（使用 Kivy SDL2 引导 + jnius WebView）
-# 注意：这里使用 SDL2 引导，在 Kivy 中使用 jnius 创建 WebView
-# 如果使用纯 webview 引导，将 p4a.bootstrap 改为 webview
-p4a.bootstrap = sdl2
+# 使用 webview bootstrap（不需要 Kivy/SDL2）
+p4a.bootstrap = webview
 
 # 源码包含的文件和目录
-source.include_patterns = templates/*, static/*, backend.py, main_android.py
+source.include_patterns = templates/*, static/*, backend.py, main.py
+
+# Android 主程序入口
+# webview bootstrap 自动查找 main.py 作为入口
+# （不需要额外设置）
 
 [buildozer]
 # 构建日志级别
