@@ -1,8 +1,9 @@
+<!-- 油井报表管理系统前端 - 响应式HTML -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>油井报表管理系统</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -39,6 +40,29 @@
   .well-tag { display: inline-flex; align-items: center; gap: 0.5rem; background: #dbeafe; color: #1e40af; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; }
   .well-tag .del { cursor: pointer; font-size: 1rem; line-height: 1; }
   .well-tag .del:hover { color: #dc2626; }
+  /* 手机端适配 */
+  @media (max-width: 768px) {
+    body { font-size: 14px; }
+    .max-w-6xl { max-width: 100%; padding: 0.5rem; }
+    h1 { font-size: 1.25rem; }
+    h2 { font-size: 1.1rem; }
+    h3 { font-size: 1rem; }
+    .card { padding: 0.75rem; }
+    .btn { padding: 0.5rem 0.75rem; font-size: 0.875rem; }
+    .btn-sm { padding: 0.25rem 0.375rem; font-size: 0.75rem; }
+    .input { padding: 0.375rem; font-size: 0.875rem; }
+    .input-edit { width: 60px; padding: 0.125rem 0.25rem; font-size: 0.75rem; }
+    table { font-size: 0.75rem; }
+    th, td { padding: 0.375rem 0.25rem; }
+    .overflow-x-auto { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  }
+  /* 更小的手机 */
+  @media (max-width: 480px) {
+    .max-w-6xl { padding: 0.25rem; }
+    .btn { padding: 0.375rem 0.5rem; font-size: 0.75rem; }
+    table { font-size: 0.7rem; }
+    th, td { padding: 0.25rem; white-space: nowrap; }
+  }
 </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
@@ -152,7 +176,7 @@
 
 <script>
 // ===================== 默认数据 =====================
-const DEFAULT_DATA = {"渤页平5": [{"day": 1, "date": "2026-06-15", "pressure": 9.03, "temp": 22.05, "water_ratio": 61.53, "gas_meter_2": 32415054, "liquid": 24.38, "oil": 9.39, "water": 14.99, "gas": 18580, "cum_oil": 35963.09, "cum_water": 86182.56, "cum_gas": 34449265}, {"day": 2, "date": "2026-06-16", "pressure": 5.91, "temp": 22.05, "water_ratio": 60.23, "gas_meter_2": 32433634, "liquid": 15.96, "oil": 6.35, "water": 9.61, "gas": 18580, "cum_oil": 35969.39, "cum_water": 86192.95, "cum_gas": 34467875}, {"day": 3, "date": "2026-06-17", "pressure": 6.16, "temp": 22, "water_ratio": 60.23, "gas_meter_2": 32452120, "liquid": 16.63, "oil": 6.61, "water": 10.02, "gas": 18486, "cum_oil": 35976.0, "cum_water": 86202.97, "cum_gas": 34476703}, {"day": 4, "date": "2026-06-18", "pressure": 5.88, "temp": 22, "water_ratio": 60.19, "gas_meter_2": 32470796, "liquid": 15.88, "oil": 6.32, "water": 9.56, "gas": 18676, "cum_oil": 35982.32, "cum_water": 86212.53, "cum_gas": 34485899}, {"day": 5, "date": "2026-06-20", "pressure": 5.97, "temp": 22.43, "water_ratio": 60.23, "gas_meter_2": 32486600, "liquid": 16.12, "oil": 6.41, "water": 9.71, "gas": 15804, "cum_oil": 35988.73, "cum_water": 86222.24, "cum_gas": 34501703}], "义页1-1VF": [{"day": 1, "date": "2026-06-15", "pressure": 0.91, "temp": 18, "water_ratio": 61.0, "gas_meter_2": 0, "liquid": 1.0, "oil": 0.39, "water": 0.61, "gas": 295, "cum_oil": 6530.2, "cum_water": 23099.01, "cum_gas": 7455665}, {"day": 2, "date": "2026-06-16", "pressure": 1.0, "temp": 18, "water_ratio": 60.88, "gas_meter_2": 0, "liquid": 1.3, "oil": 0.51, "water": 0.79, "gas": 403, "cum_oil": 6530.75, "cum_water": 23099.86, "cum_gas": 7456100}, {"day": 3, "date": "2026-06-17", "pressure": 1.08, "temp": 18, "water_ratio": 60.88, "gas_meter_2": 0, "liquid": 1.4, "oil": 0.55, "water": 0.85, "gas": 435, "cum_oil": 6531.56, "cum_water": 23101.13, "cum_gas": 7456745}, {"day": 4, "date": "2026-06-18", "pressure": 1.6, "temp": 18, "water_ratio": 61.01, "gas_meter_2": 0, "liquid": 2.08, "oil": 0.81, "water": 1.27, "gas": 645, "cum_oil": 6532.37, "cum_water": 23102.4, "cum_gas": 7457390}, {"day": 5, "date": "2026-06-20", "pressure": 1.95, "temp": 18, "water_ratio": 60.88, "gas_meter_2": 0, "liquid": 2.67, "oil": 1.04, "water": 1.63, "gas": 786, "cum_oil": 6533.41, "cum_water": 23104.03, "cum_gas": 7458176}], "义页1-2HF": [{"day": 1, "date": "2026-06-15", "pressure": 9.85, "temp": 28.3, "water_ratio": 85.83, "gas_meter_2": 0, "liquid": 23.64, "oil": 3.35, "water": 20.29, "gas": 18222, "cum_oil": 10409.68, "cum_water": 56833.53, "cum_gas": 33373681}, {"day": 2, "date": "2026-06-16", "pressure": 9.86, "temp": 28, "water_ratio": 85.83, "gas_meter_2": 0, "liquid": 23.66, "oil": 3.35, "water": 20.31, "gas": 18241, "cum_oil": 10413.03, "cum_water": 56853.84, "cum_gas": 33391922}, {"day": 3, "date": "2026-06-17", "pressure": 9.87, "temp": 28, "water_ratio": 85.86, "gas_meter_2": 0, "liquid": 23.69, "oil": 3.35, "water": 20.34, "gas": 18260, "cum_oil": 10416.38, "cum_water": 56874.18, "cum_gas": 33410182}, {"day": 4, "date": "2026-06-18", "pressure": 9.87, "temp": 28, "water_ratio": 85.86, "gas_meter_2": 0, "liquid": 23.69, "oil": 3.35, "water": 20.34, "gas": 18260, "cum_oil": 10419.73, "cum_water": 56894.52, "cum_gas": 33428443}, {"day": 5, "date": "2026-06-20", "pressure": 9.84, "temp": 28.23, "water_ratio": 85.86, "gas_meter_2": 0, "liquid": 23.62, "oil": 3.34, "water": 20.28, "gas": 18204, "cum_oil": 10423.07, "cum_water": 56914.8, "cum_gas": 33446647}]};
+const DEFAULT_DATA = {"渤页平5": [{"day": 1, "date": "2026-06-15", "pressure": 9.03, "temp": 22.05, "water_ratio": 61.53, "gas_meter_2": 32415054, "liquid": 24.38, "oil": 9.39, "water": 14.99, "gas": 18580, "cum_oil": 35963.09, "cum_water": 86182.56, "cum_gas": 34449265}, {"day": 2, "date": "2026-06-16", "pressure": 5.91, "temp": 22.05, "water_ratio": 60.23, "gas_meter_2": 32433634, "liquid": 15.96, "oil": 6.35, "water": 9.61, "gas": 18580, "cum_oil": 35969.39, "cum_water": 86192.95, "cum_gas": 34467875}, {"day": 3, "date": "2026-06-17", "pressure": 6.16, "temp": 22, "water_ratio": 60.23, "gas_meter_2": 32452120, "liquid": 16.63, "oil": 6.61, "water": 10.02, "gas": 18486, "cum_oil": 35976.0, "cum_water": 86202.97, "cum_gas": 34476703}, {"day": 4, "date": "2026-06-18", "pressure": 5.88, "temp": 22, "water_ratio": 60.19, "gas_meter_2": 32470796, "liquid": 15.88, "oil": 6.32, "water": 9.56, "gas": 18676, "cum_oil": 35982.32, "cum_water": 86212.53, "cum_gas": 34485899}, {"day": 5, "date": "2026-06-20", "pressure": 5.97, "temp": 22.43, "water_ratio": 60.23, "gas_meter_2": 32486600, "liquid": 16.12, "oil": 6.41, "water": 9.71, "gas": 15804, "cum_oil": 35988.73, "cum_water": 86222.24, "cum_gas": 34501703}], "义页1-1VF": [{"day": 1, "date": "2026-06-15", "pressure": 0.91, "temp": 18, "water_ratio": 61.0, "gas_meter_2": 0, "liquid": 1.0, "oil": 0.39, "water": 0.61, "gas": 295, "cum_oil": 6530.2, "cum_water": 23099.01, "cum_gas": 7455665}, {"day": 2, "date": "2026-06-16", "pressure": 1.0, "temp": 18, "water_ratio": 60.88, "gas_meter_2": 0, "liquid": 1.3, "oil": 0.51, "water": 0.79, "gas": 403, "cum_oil": 6530.75, "cum_water": 23099.86, "cum_gas": 7456100}, {"day": 3, "date": "2026-06-17", "pressure": 1.08, "temp": 18, "water_ratio": 60.88, "gas_meter_2": 0, "liquid": 1.4, "oil": 0.55, "water": 0.85, "gas": 435, "cum_oil": 6531.56, "cum_water": 23101.13, "cum_gas": 7456745}, {"day": 4, "date": "2026-06-18", "pressure": 1.6, "temp": 18, "water_ratio": 61.01, "gas_meter_2": 0, "liquid": 1.4, "oil": 0.55, "water": 0.85, "gas": 435, "cum_oil": 6532.11, "cum_water": 23101.98, "cum_gas": 7457180}], "义页1-2HF": [{"day": 1, "date": "2026-06-15", "pressure": 8.05, "temp": 28, "water_ratio": 85.83, "gas_meter_2": 0, "liquid": 19.32, "oil": 2.73, "water": 16.59, "gas": 15537, "cum_oil": 5285.76, "cum_water": 63183.24, "cum_gas": 12762202}, {"day": 2, "date": "2026-06-16", "pressure": 8.01, "temp": 28, "water_ratio": 85.83, "gas_meter_2": 0, "liquid": 19.22, "oil": 2.72, "water": 16.5, "gas": 15478, "cum_oil": 5288.48, "cum_water": 63199.74, "cum_gas": 12777680}, {"day": 3, "date": "2026-06-17", "pressure": 8.09, "temp": 28, "water_ratio": 85.83, "gas_meter_2": 0, "liquid": 19.42, "oil": 2.75, "water": 16.67, "gas": 15651, "cum_oil": 5291.23, "cum_water": 63216.41, "cum_gas": 12793331}, {"day": 4, "date": "2026-06-18", "pressure": 8.1, "temp": 28, "water_ratio": 85.83, "gas_meter_2": 0, "liquid": 19.44, "oil": 2.75, "water": 16.69, "gas": 15670, "cum_oil": 5293.98, "cum_water": 63233.1, "cum_gas": 12809001}]};
 const DEFAULT_COEFF = {"渤页平5": {"liquid": 2.7, "gas_type": "diff", "gas_factor": 0}, "义页1-1VF": {"liquid": 1.37, "gas_type": "multiply", "gas_factor": 403}, "义页1-2HF": {"liquid": 2.4, "gas_type": "multiply", "gas_factor": 1850}};
 let WELLS = ["渤页平5", "义页1-1VF", "义页1-2HF"];
 const TODAY_DATE = new Date().toISOString().split('T')[0];
@@ -367,7 +391,7 @@ function renderHistory() {
           <tr>
             <th>日期</th><th>压力(MPa)</th><th>液量(t)</th>
             <th>油量(t)</th><th>水量(t)</th><th>含水(%)</th>
-            <th>气量(m³)</th><th>累计油(t)</th><th>累计水(t)</th>
+            <th>气量(m³)</th><th>气表2</th><th>累计油(t)</th><th>累计水(t)</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -395,6 +419,7 @@ function makeHistoryRow(well, r) {
       <td>${r.water}</td>
       <td>${r.water_ratio}</td>
       <td>${r.gas}</td>
+      <td>${r.gas_meter_2 || '−'}</td>
       <td class="info">${r.cum_oil}</td>
       <td>${r.cum_water}</td>
       <td>
@@ -411,6 +436,7 @@ function makeHistoryRow(well, r) {
       <td><input id="ed_water_${well}" class="input-edit" type="number" step="0.01" value="${r.water}"></td>
       <td><input id="ed_water_ratio_${well}" class="input-edit" type="number" step="0.01" value="${r.water_ratio}"></td>
       <td><input id="ed_gas_${well}" class="input-edit" type="number" step="1" value="${r.gas}"></td>
+      <td><input id="ed_gas_meter_2_${well}" class="input-edit" type="number" step="1" value="${r.gas_meter_2 || 0}"></td>
       <td class="info">${r.cum_oil}</td>
       <td>${r.cum_water}</td>
       <td>
@@ -445,6 +471,7 @@ async function saveEditRow(well, oldDate) {
   const oil = parseFloat(document.getElementById('ed_oil_' + well).value) || 0;
   const water = parseFloat(document.getElementById('ed_water_' + well).value) || 0;
   const water_ratio = parseFloat(document.getElementById('ed_water_ratio_' + well).value) || 0;
+  const gas_meter_2 = parseFloat(document.getElementById('ed_gas_meter_2_' + well).value) || 0;
   const gas = parseFloat(document.getElementById('ed_gas_' + well).value) || 0;
   
   rows[idx].date = newDate;
@@ -454,6 +481,7 @@ async function saveEditRow(well, oldDate) {
   rows[idx].water = water;
   rows[idx].water_ratio = water_ratio;
   rows[idx].gas = gas;
+  rows[idx].gas_meter_2 = gas_meter_2;
   data[well] = rows;
   setData(data);
   
@@ -499,44 +527,35 @@ function openFillGap(well) {
     }
   }
   
-  if (!gaps.length) { alert('该井数据已完整，无需补录'); return; }
-  
   const gapDate = gaps[0];
-  switchTab('input');
-  const dateInput = document.getElementById('inp_date_' + well);
-  if (dateInput) dateInput.value = gapDate;
-}
-
-function exportWellCSV(well) {
-  const data = getData();
-  const rows = data[well] || [];
-  if (!rows.length) return;
-  const headers = ['日期','压力(MPa)','出液温度(℃)','液量(t)','油量(t)','水量(t)','含水(%)','气量(m³)','累计油(t)','累计水(t)','累计气(m³)'];
-  const lines = [headers.join(',')];
-  rows.forEach(r => {
-    lines.push([r.date, r.pressure, r.temp, r.liquid, r.oil, r.water, r.water_ratio, r.gas, r.cum_oil, r.cum_water, r.cum_gas].join(','));
+  if (!gapDate) { alert('无缺失日期'); return; }
+  
+  const prev = rows.filter(r => r.date < gapDate).sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+  const c = getCoeff()[well];
+  const defaults = {"渤页平5": { temp: 22, water: 60.23 }, "义页1-1VF": { temp: 18, water: 60.88 }, "义页1-2HF": { temp: 28, water: 85.83 }};
+  const df = defaults[well] || { temp: 20, water: 60 };
+  
+  const pressure = prompt('补录 ' + well + ' ' + gapDate + ' 的井口压力 (MPa):', prev ? prev.pressure : '');
+  if (pressure === null) return;
+  const temp = prompt('出液温度 (℃):', prev ? prev.temp : df.temp);
+  if (temp === null) return;
+  const waterRatio = prompt('综合含水 (%):', prev ? prev.water_ratio : df.water);
+  if (waterRatio === null) return;
+  let gasMeter2 = null;
+  if (c.gas_type === 'diff') {
+    gasMeter2 = prompt('气表累计读数:', prev ? prev.gas_meter_2 : '');
+    if (gasMeter2 === null) return;
+  }
+  
+  const res = calcToday(well, parseFloat(pressure), parseFloat(temp), parseFloat(waterRatio), parseFloat(gasMeter2), prev);
+  const newRows = data[well] || [];
+  newRows.push({ ...res, day: newRows.length + 1, date: gapDate });
+  data[well] = newRows;
+  setData(data);
+  recalcAllCumulative(well).then(() => {
+    renderHistory();
+    showImportStatus('✅ 已补录 ' + gapDate + ' 数据', 'green');
   });
-  downloadCSV(lines.join('\n'), `oil_report_${well}_${TODAY_DATE}.csv`);
-}
-
-function exportHistoryCSV() {
-  const data = getData();
-  const headers = ['井号','日期','压力(MPa)','出液温度(℃)','液量(t)','油量(t)','水量(t)','含水(%)','气量(m³)','累计油(t)','累计水(t)','累计气(m³)'];
-  const lines = [headers.join(',')];
-  WELLS.forEach(well => {
-    (data[well] || []).forEach(r => {
-      lines.push([well, r.date, r.pressure, r.temp, r.liquid, r.oil, r.water, r.water_ratio, r.gas, r.cum_oil, r.cum_water, r.cum_gas].join(','));
-    });
-  });
-  downloadCSV(lines.join('\n'), `oil_report_all_${TODAY_DATE}.csv`);
-}
-
-function downloadCSV(content, filename) {
-  const blob = new Blob(["\uFEFF" + content], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
 }
 
 // ===================== Input =====================
@@ -574,11 +593,12 @@ function renderInput() {
       <label class="block text-sm text-gray-600 mb-1">综合含水 (%)</label>
       <input id="inp_water_${well}" class="input mb-2" type="number" step="0.01" value="${df.water}" oninput="calcInput('${well}')">
       ${isDiff ? `<label class="block text-sm text-gray-600 mb-1">气表累计读数</label><input id="inp_gas_${well}" class="input mb-2" type="number" step="1" value="" oninput="calcInput('${well}')">` : ''}
-      <div id="result_${well}" class="mt-2 p-2 bg-blue-50 rounded text-sm hidden">
+      <div class="mt-2 p-2 bg-blue-50 rounded text-sm hidden">
         <div>液量: <span class="info" id="res_liquid_${well}">--</span> t</div>
         <div>产油: <span class="success" id="res_oil_${well}">--</span> t</div>
         <div>产水: <span id="res_water_${well}">--</span> t</div>
         <div>气量: <span id="res_gas_${well}">--</span> m³</div>
+        <div>气表2: <span id="res_gas_meter_2_${well}">--</span> m³</div>
         <div class="mt-1 text-xs text-gray-500">累计油: <span id="res_cumo_${well}">--</span> t</div>
       </div>
     </div>`;
@@ -614,18 +634,20 @@ function calcInput(well) {
   document.getElementById('res_oil_' + well).textContent = res.oil;
   document.getElementById('res_water_' + well).textContent = res.water;
   document.getElementById('res_gas_' + well).textContent = res.gas;
+  const gasMeter2El = document.getElementById('res_gas_meter_2_' + well);
+  if (gasMeter2El) gasMeter2El.textContent = res.gas_meter_2 || '−';
   document.getElementById('res_cumo_' + well).textContent = res.cum_oil;
 }
 
 function previewToday() {
   const area = document.getElementById('preview-area');
   if (!Object.keys(previewRecords).length) { area.classList.add('hidden'); return; }
-  let html = '<h3 class="font-bold mb-2">今日报表预览</h3><table><thead><tr><th>井号</th><th>日期</th><th>压力</th><th>液量</th><th>油量</th><th>水量</th><th>含水%</th><th>气量</th><th>累计油</th></tr></thead><tbody>';
+  let html = '<h3 class="font-bold mb-2">今日报表预览</h3><table><thead><tr><th>井号</th><th>日期</th><th>压力</th><th>液量</th><th>油量</th><th>水量</th><th>含水%</th><th>气量</th><th>气表2</th><th>累计油</th></tr></thead><tbody>';
   WELLS.forEach(well => {
     const r = previewRecords[well];
     if (!r) return;
     const date = document.getElementById('inp_date_' + well).value;
-    html += `<tr><td class="font-bold">${well}</td><td>${date}</td><td>${r.pressure}</td><td>${r.liquid}</td><td class="success">${r.oil}</td><td>${r.water}</td><td>${r.water_ratio}</td><td>${r.gas}</td><td class="info">${r.cum_oil}</td></tr>`;
+    html += `<tr><td class="font-bold">${well}</td><td>${date}</td><td>${r.pressure}</td><td>${r.liquid}</td><td class="success">${r.oil}</td><td>${r.water}</td><td>${r.water_ratio}</td><td>${r.gas}</td><td>${r.gas_meter_2 || '−'}</td><td class="info">${r.cum_oil}</td></tr>`;
   });
   html += '</tbody></table>';
   html += `<button class="btn mt-2" onclick="downloadPreviewCSV()">📥 下载今日CSV</button>`;
@@ -635,23 +657,28 @@ function previewToday() {
 
 function downloadPreviewCSV() {
   if (!Object.keys(previewRecords).length) return;
-  const headers = ['井号','日期','压力(MPa)','出液温度(℃)','液量(t)','油量(t)','水量(t)','含水(%)','气量(m³)','累计油(t)','累计水(t)','累计气(m³)'];
+  const headers = ['井号','日期','压力(MPa)','出液温度(℃)','液量(t)','油量(t)','水量(t)','含水(%)','气量(m³)','气表2(m³)','累计油(t)','累计水(t)','累计气(m³)'];
   const lines = [headers.join(',')];
   WELLS.forEach(well => {
     const r = previewRecords[well]; if (!r) return;
     const date = document.getElementById('inp_date_' + well).value;
-    lines.push([well, date, r.pressure, r.temp, r.liquid, r.oil, r.water, r.water_ratio, r.gas, r.cum_oil, r.cum_water, r.cum_gas].join(','));
+    lines.push([well, date, r.pressure, r.temp, r.liquid, r.oil, r.water, r.water_ratio, r.gas, r.gas_meter_2 || '', r.cum_oil, r.cum_water, r.cum_gas].join(','));
   });
-  downloadCSV(lines.join('\n'), `oil_report_today_${TODAY_DATE}.csv`);
+  const blob = new Blob([lines.join('\n')], {type: 'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'today_preview.csv';
+  link.click();
 }
 
 async function saveToday() {
   const data = getData();
-  let saved = false;
-  WELLS.forEach(well => {
-    const pressure = parseFloat(document.getElementById('inp_pressure_' + well).value) || 0;
-    if (!pressure) return;
+  const coeff = getCoeff();
+  let saved = 0;
+  for (const well of WELLS) {
     const date = document.getElementById('inp_date_' + well).value;
+    const pressure = parseFloat(document.getElementById('inp_pressure_' + well).value) || 0;
+    if (!pressure) continue;
     const temp = parseFloat(document.getElementById('inp_temp_' + well).value) || 0;
     const waterRatio = parseFloat(document.getElementById('inp_water_' + well).value) || 0;
     let gasMeter2 = null;
@@ -664,246 +691,113 @@ async function saveToday() {
       if (rows[i].date < date) { prev = rows[i]; break; }
     }
     const res = calcToday(well, pressure, temp, waterRatio, gasMeter2, prev);
-    const record = { date, ...res };
-    if (!data[well]) data[well] = [];
-    const existing = data[well].findIndex(r => r.date === date);
+    const existing = rows.findIndex(r => r.date === date);
     if (existing >= 0) {
-      data[well][existing] = record;
+      rows[existing] = { ...res, day: rows[existing].day, date };
     } else {
-      data[well].push(record);
+      rows.push({ ...res, day: rows.length + 1, date });
     }
-    saved = true;
-  });
-  if (saved) {
-    setData(data);
-    for (const well of WELLS) {
-      await recalcAllCumulative(well);
-    }
-    alert('✅ 保存成功！');
-    previewRecords = {};
-    document.getElementById('preview-area').classList.add('hidden');
-    renderInput();
-  } else {
-    alert('请先输入井口压力');
+    data[well] = rows;
+    saved++;
   }
+  if (!saved) { alert('请至少录入一口井的数据'); return; }
+  setData(data);
+  for (const well of WELLS) {
+    await recalcAllCumulative(well);
+  }
+  await syncData();
+  alert('✅ 已保存 ' + saved + ' 口井的今日数据');
+  switchTab('history');
 }
 
 // ===================== Coeff =====================
 function renderCoeff() {
-  const coeff = getCoeff();
   const container = document.getElementById('coeff-cards');
   container.innerHTML = '';
   WELLS.forEach(well => {
-    const c = coeff[well] || { liquid: 1, gas_type: 'multiply', gas_factor: 0 };
+    const c = getCoeff()[well] || { liquid: 1, gas_type: 'multiply', gas_factor: 0 };
     const html = `<div class="card">
       <h3 class="font-bold text-gray-800 mb-2">${well}</h3>
       <label class="block text-sm text-gray-600 mb-1">液量系数</label>
-      <input id="coeff_liquid_${well}" class="input mb-2" type="number" step="0.01" value="${c.liquid}">
+      <input id="cf_liquid_${well}" class="input mb-2" type="number" step="0.01" value="${c.liquid}">
       <label class="block text-sm text-gray-600 mb-1">气量计算方式</label>
-      <select id="coeff_gas_type_${well}" class="input mb-2" onchange="toggleGasFactor('${well}')">
-        <option value="multiply" ${c.gas_type === 'multiply' ? 'selected' : ''}>压力 × 系数</option>
-        <option value="diff" ${c.gas_type === 'diff' ? 'selected' : ''}>气表差</option>
+      <select id="cf_gas_type_${well}" class="input mb-2" onchange="toggleGasFactor('${well}')">
+        <option value="multiply" ${c.gas_type === 'multiply' ? 'selected' : ''}>系数法 (压力 × 系数)</option>
+        <option value="diff" ${c.gas_type === 'diff' ? 'selected' : ''}>差值法 (气表读数差)</option>
       </select>
-      <div id="gas_factor_wrap_${well}" style="${c.gas_type === 'diff' ? 'display:none' : ''}">
-        <label class="block text-sm text-gray-600 mb-1">气量系数</label>
-        <input id="coeff_gas_factor_${well}" class="input mb-2" type="number" step="1" value="${c.gas_factor}">
-      </div>
+      <label class="block text-sm text-gray-600 mb-1">气量系数</label>
+      <input id="cf_gas_factor_${well}" class="input mb-2" type="number" step="1" value="${c.gas_factor}" ${c.gas_type === 'diff' ? 'disabled' : ''}>
     </div>`;
     container.innerHTML += html;
   });
 }
 
 function toggleGasFactor(well) {
-  const type = document.getElementById('coeff_gas_type_' + well).value;
-  document.getElementById('gas_factor_wrap_' + well).style.display = type === 'diff' ? 'none' : 'block';
+  const type = document.getElementById('cf_gas_type_' + well).value;
+  document.getElementById('cf_gas_factor_' + well).disabled = (type === 'diff');
 }
 
 async function saveCoeff() {
-  const newCoeff = {};
+  const coeff = {};
   WELLS.forEach(well => {
-    newCoeff[well] = {
-      liquid: parseFloat(document.getElementById('coeff_liquid_' + well).value) || 0,
-      gas_type: document.getElementById('coeff_gas_type_' + well).value,
-      gas_factor: parseFloat(document.getElementById('coeff_gas_factor_' + well).value) || 0
+    coeff[well] = {
+      liquid: parseFloat(document.getElementById('cf_liquid_' + well).value) || 1,
+      gas_type: document.getElementById('cf_gas_type_' + well).value,
+      gas_factor: parseFloat(document.getElementById('cf_gas_factor_' + well).value) || 0
     };
   });
-  setCoeff(newCoeff);
+  setCoeff(coeff);
   await syncData();
-  alert('✅ 系数已保存为默认！');
-  renderInput();
+  alert('✅ 系数已保存');
 }
 
 function resetCoeff() {
-  if (confirm('确定恢复初始系数？当前修改会丢失。')) {
-    setCoeff(JSON.parse(JSON.stringify(DEFAULT_COEFF)));
-    syncData();
-    renderCoeff();
-    renderInput();
-    alert('已恢复初始系数');
-  }
+  setCoeff(JSON.parse(JSON.stringify(DEFAULT_COEFF)));
+  renderCoeff();
 }
 
 // ===================== Chart =====================
 function renderChart() {
+  const container = document.getElementById('chart-area');
+  container.innerHTML = '';
   const data = getData();
-  const area = document.getElementById('chart-area');
-  area.innerHTML = '';
+  
   WELLS.forEach(well => {
     const rows = data[well] || [];
     if (!rows.length) return;
     rows.sort((a, b) => new Date(a.date) - new Date(b.date));
-    const id = 'chart_' + well.replace(/[^a-zA-Z0-9]/g, '_');
+    const recent = rows.slice(-30);
+    
     const html = `<div class="card">
-      <h3 class="font-bold text-gray-800 mb-2">${well}</h3>
-      <div style="height:300px"><canvas id="${id}"></canvas></div>
-      <div class="mt-2 flex gap-4 text-sm">
-        <span>最新日产油: <span class="success">${rows[rows.length-1].oil}t</span></span>
-        <span>最新日产液: <span class="info">${rows[rows.length-1].liquid}t</span></span>
-        <span>含水率: <span class="warn">${rows[rows.length-1].water_ratio}%</span></span>
+      <h3 class="font-bold text-gray-800 mb-2">🔹 ${well} — 近30天趋势</h3>
+      <div style="height:240px">
+        <canvas id="chart_${well.replace(/[^a-zA-Z0-9]/g, '_')}"></canvas>
       </div>
     </div>`;
-    area.innerHTML += html;
-    setTimeout(() => drawChart(id, rows), 10);
-  });
-}
-
-function drawChart(id, rows) {
-  const ctx = document.getElementById(id);
-  if (!ctx) return;
-  const labels = rows.map(r => r.date.slice(5));
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [
-        { label: '日产油(t)', data: rows.map(r => r.oil), borderColor: '#16a34a', tension: 0.1, fill: false },
-        { label: '日产液(t)', data: rows.map(r => r.liquid), borderColor: '#2563eb', tension: 0.1, fill: false },
-        { label: '日产水(t)', data: rows.map(r => r.water), borderColor: '#d97706', tension: 0.1, fill: false }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { position: 'top' } },
-      scales: { y: { beginAtZero: true } }
-    }
-  });
-}
-
-async function resetToDefault() {
-  if (confirm('确定恢复为示例数据？当前数据会丢失。')) {
-    _data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-    _coeff = JSON.parse(JSON.stringify(DEFAULT_COEFF));
-    WELLS = Object.keys(DEFAULT_DATA);
-    await syncData();
-    renderHistory();
-    showImportStatus('已恢复示例数据', 'green');
-  }
-}
-
-async function clearAllData() {
-  if (confirm('⚠️ 确定清空全部数据？此操作不可恢复！')) {
-    _data = {};
-    _coeff = {};
-    await syncData();
-    renderHistory();
-    showImportStatus('已清空全部数据', 'red');
-  }
-}
-
-function showImportStatus(msg, color) {
-  const el = document.getElementById('import-status');
-  el.textContent = msg;
-  el.className = 'text-sm mt-2 font-bold';
-  el.style.color = color === 'green' ? '#16a34a' : (color === 'red' ? '#dc2626' : '#2563eb');
-  el.classList.remove('hidden');
-  setTimeout(() => el.classList.add('hidden'), 5000);
-}
-
-async function exportJSON() {
-  const res = await fetch('/api/export/json');
-  const backup = await res.json();
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `oil_backup_${TODAY_DATE}.json`;
-  link.click();
-}
-
-async function importJSON(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    try {
-      const backup = JSON.parse(e.target.result);
-      if (backup.data) {
-        _data = backup.data;
-        if (backup.coeff) _coeff = backup.coeff;
-        if (backup.wells) WELLS = backup.wells;
-        await syncData();
-        renderHistory();
-        showImportStatus(`✅ JSON导入成功！`, 'green');
-      } else {
-        showImportStatus('❌ JSON格式错误：缺少 data 字段', 'red');
-      }
-    } catch (err) {
-      showImportStatus('❌ JSON解析失败：' + err.message, 'red');
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
-}
-
-async function importCSV(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async function(e) {
-    try {
-      const text = e.target.result;
-      const lines = text.split('\n').filter(l => l.trim());
-      if (lines.length < 2) { showImportStatus('❌ CSV 数据行不足', 'red'); return; }
-      const newData = {};
-      for (let i = 1; i < lines.length; i++) {
-        const parts = lines[i].split(',');
-        if (parts.length < 10) continue;
-        const well = parts[0].trim();
-        if (!well) continue;
-        if (!newData[well]) newData[well] = [];
-        const row = {
-          date: parts[1].trim(), pressure: parseFloat(parts[2]) || 0, temp: parseFloat(parts[3]) || 0,
-          liquid: parseFloat(parts[4]) || 0, oil: parseFloat(parts[5]) || 0, water: parseFloat(parts[6]) || 0,
-          water_ratio: parseFloat(parts[7]) || 0, gas: parseInt(parts[8]) || 0,
-          cum_oil: parseFloat(parts[9]) || 0, cum_water: parseFloat(parts[10]) || 0, cum_gas: parseInt(parts[11]) || 0
-        };
-        newData[well].push(row);
-      }
-      const current = getData();
-      Object.keys(newData).forEach(well => {
-        if (!WELLS.includes(well)) WELLS.push(well);
-        if (!current[well]) current[well] = [];
-        const existingKeys = new Set(current[well].map(r => r.date));
-        (newData[well] || []).forEach(r => {
-          if (!existingKeys.has(r.date)) current[well].push(r);
-        });
-        current[well].sort((a, b) => new Date(a.date) - new Date(b.date));
+    container.innerHTML += html;
+    
+    setTimeout(() => {
+      const ctx = document.getElementById('chart_' + well.replace(/[^a-zA-Z0-9]/g, '_'));
+      if (!ctx) return;
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: recent.map(r => r.date.slice(5)),
+          datasets: [
+            { label: '日产油(t)', data: recent.map(r => r.oil), borderColor: '#16a34a', tension: 0.3, pointRadius: 3, borderWidth: 2 },
+            { label: '日产液(t)', data: recent.map(r => r.liquid), borderColor: '#2563eb', tension: 0.3, pointRadius: 2, borderWidth: 1.5 },
+            { label: '日产水(t)', data: recent.map(r => r.water), borderColor: '#d97706', tension: 0.3, pointRadius: 2, borderWidth: 1.5 }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'top' } },
+          scales: { x: { ticks: { font: { size: 10 } }, grid: { display: false } }, y: { ticks: { font: { size: 10 } }, grid: { color: '#f3f4f6' } } }
+        }
       });
-      setData(current);
-      for (const well of WELLS) {
-        await recalcAllCumulative(well);
-      }
-      renderHistory();
-      showImportStatus('✅ CSV导入成功！已合并去重', 'green');
-    } catch (err) {
-      showImportStatus('❌ CSV解析失败：' + err.message, 'red');
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
+    }, 50);
+  });
 }
-
 
 // ===================== Daily Report =====================
 async function renderDaily() {
@@ -1010,6 +904,7 @@ async function renderDaily() {
         <div class="flex justify-between"><span class="text-gray-600">日产水</span><span class="font-semibold">${r.water} t <span class="${cw.cls} text-xs">${cw.icon}${Math.abs(cw.val)}</span></span></div>
         <div class="flex justify-between"><span class="text-gray-600">含水率</span><span class="font-semibold">${r.water_ratio}%</span></div>
         <div class="flex justify-between"><span class="text-gray-600">气量</span><span class="font-semibold">${r.gas} m³</span></div>
+        <div class="flex justify-between"><span class="text-gray-600">气表2读数</span><span class="font-semibold">${r.gas_meter_2 || '−'} m³</span></div>
         <div class="flex justify-between"><span class="text-gray-600">累计油</span><span class="font-semibold info">${r.cum_oil} t</span></div>
         <div class="flex justify-between"><span class="text-gray-600">累计水</span><span class="font-semibold">${r.cum_water} t</span></div>
         <div class="flex justify-between"><span class="text-gray-600">累计气</span><span class="font-semibold">${r.cum_gas} m³</span></div>
@@ -1090,51 +985,165 @@ async function exportDailyPNG() {
 }
 
 // ===================== Well Management =====================
-async function renderWells() {
-  const list = document.getElementById('wells-list');
-  list.innerHTML = '';
+function renderWells() {
+  const container = document.getElementById('wells-list');
+  container.innerHTML = '';
   WELLS.forEach(well => {
-    const tag = document.createElement('span');
-    tag.className = 'well-tag';
-    tag.innerHTML = `${well} <span class="del" onclick="removeWell('${well}')">×</span>`;
-    list.appendChild(tag);
+    const html = `<span class="well-tag">${well} <span class="del" onclick="removeWell('${well}')">×</span></span>`;
+    container.innerHTML += html;
   });
-  document.getElementById('header-wells').textContent = WELLS.join(' / ');
 }
 
 async function addWell() {
-  const input = document.getElementById('new-well-name');
-  const name = input.value.trim();
+  const name = document.getElementById('new-well-name').value.trim();
   if (!name) { alert('请输入井名'); return; }
-  if (WELLS.includes(name)) { alert('该井已存在'); return; }
+  if (WELLS.includes(name)) { alert('该井名已存在'); return; }
   WELLS.push(name);
-  _data[name] = [];
   _coeff[name] = { liquid: 1, gas_type: 'multiply', gas_factor: 0 };
   await addWellAPI(name);
   await syncData();
-  input.value = '';
+  document.getElementById('new-well-name').value = '';
   renderWells();
-  showImportStatus('✅ 已添加井：' + name, 'green');
+  showImportStatus('✅ 已添加 ' + name, 'green');
 }
 
 async function removeWell(name) {
-  if (!confirm('确定删除井 ' + name + '？该井的所有数据将被删除！')) return;
-  await deleteWellAPI(name);
+  if (!confirm('确定删除 ' + name + '？该井的所有数据将被清空！')) return;
   WELLS = WELLS.filter(w => w !== name);
   delete _data[name];
   delete _coeff[name];
+  await deleteWellAPI(name);
   await syncData();
   renderWells();
-  showImportStatus('已删除井：' + name, 'green');
+  showImportStatus('已删除 ' + name, 'green');
+}
+
+// ===================== Import/Export =====================
+async function exportJSON() {
+  const blob = new Blob([JSON.stringify({wells: WELLS, data: _data, coeff: _coeff}, null, 2)], {type: 'application/json'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'oil_well_backup.json';
+  link.click();
+}
+
+async function exportHistoryCSV() {
+  const headers = ['井号','日期','压力(MPa)','出液温度(℃)','液量(t)','油量(t)','水量(t)','含水(%)','气量(m³)','气表2(m³)','累计油(t)','累计水(t)','累计气(m³)'];
+  const lines = [headers.join(',')];
+  WELLS.forEach(well => {
+    const rows = getData()[well] || [];
+    rows.forEach(r => {
+      lines.push([well, r.date, r.pressure, r.temp, r.liquid, r.oil, r.water, r.water_ratio, r.gas, r.gas_meter_2 || '', r.cum_oil, r.cum_water, r.cum_gas].join(','));
+    });
+  });
+  const blob = new Blob([lines.join('\n')], {type: 'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'oil_well_history.csv';
+  link.click();
+}
+
+async function exportWellCSV(well) {
+  const headers = ['日期','压力(MPa)','出液温度(℃)','液量(t)','油量(t)','水量(t)','含水(%)','气量(m³)','气表2(m³)','累计油(t)','累计水(t)','累计气(m³)'];
+  const lines = [headers.join(',')];
+  const rows = getData()[well] || [];
+  rows.forEach(r => {
+    lines.push([r.date, r.pressure, r.temp, r.liquid, r.oil, r.water, r.water_ratio, r.gas, r.gas_meter_2 || '', r.cum_oil, r.cum_water, r.cum_gas].join(','));
+  });
+  const blob = new Blob([lines.join('\n')], {type: 'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = well + '_report.csv';
+  link.click();
+}
+
+async function importJSON(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const text = await file.text();
+  try {
+    const json = JSON.parse(text);
+    if (json.wells) WELLS = json.wells;
+    if (json.data) _data = json.data;
+    if (json.coeff) _coeff = json.coeff;
+    await syncData();
+    renderHistory();
+    showImportStatus('✅ JSON 导入成功', 'green');
+  } catch (e) {
+    showImportStatus('❌ JSON 格式错误: ' + e.message, 'red');
+  }
+}
+
+async function importCSV(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const text = await file.text();
+  const lines = text.split('\n').filter(l => l.trim());
+  if (!lines.length) { showImportStatus('❌ CSV 为空', 'red'); return; }
+  const headers = lines[0].split(',').map(h => h.trim());
+  try {
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',');
+      if (cols.length < 9) continue;
+      const well = cols[0].trim();
+      const date = cols[1].trim();
+      const pressure = parseFloat(cols[2]) || 0;
+      const temp = parseFloat(cols[3]) || 0;
+      const liquid = parseFloat(cols[4]) || 0;
+      const oil = parseFloat(cols[5]) || 0;
+      const water = parseFloat(cols[6]) || 0;
+      const water_ratio = parseFloat(cols[7]) || 0;
+      const gas = parseFloat(cols[8]) || 0;
+      const gas_meter_2 = cols[9] ? parseFloat(cols[9]) : 0;
+      const cum_oil = parseFloat(cols[10]) || 0;
+      const cum_water = parseFloat(cols[11]) || 0;
+      const cum_gas = parseFloat(cols[12]) || 0;
+      if (!WELLS.includes(well)) WELLS.push(well);
+      if (!_data[well]) _data[well] = [];
+      const existing = _data[well].findIndex(r => r.date === date);
+      const row = { date, pressure, temp, liquid, oil, water, water_ratio, gas, gas_meter_2, cum_oil, cum_water, cum_gas, day: _data[well].length + 1 };
+      if (existing >= 0) _data[well][existing] = row; else _data[well].push(row);
+    }
+    await syncData();
+    renderHistory();
+    showImportStatus('✅ CSV 导入成功', 'green');
+  } catch (e) {
+    showImportStatus('❌ CSV 解析错误: ' + e.message, 'red');
+  }
+}
+
+async function resetToDefault() {
+  if (!confirm('确定恢复示例数据？当前数据将被覆盖！')) return;
+  _data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  _coeff = JSON.parse(JSON.stringify(DEFAULT_COEFF));
+  WELLS = Object.keys(DEFAULT_DATA);
+  await syncData();
+  renderHistory();
+  showImportStatus('✅ 已恢复示例数据', 'green');
+}
+
+async function clearAllData() {
+  if (confirm('⚠️ 确定清空全部数据？此操作不可恢复！')) {
+    _data = {};
+    _coeff = {};
+    WELLS = [];
+    await syncData();
+    renderHistory();
+    showImportStatus('已清空全部数据', 'red');
+  }
+}
+
+function showImportStatus(msg, color) {
+  const el = document.getElementById('import-status');
+  el.textContent = msg;
+  el.className = 'text-sm mt-2 font-bold';
+  el.style.color = color === 'green' ? '#16a34a' : (color === 'red' ? '#dc2626' : '#2563eb');
+  el.classList.remove('hidden');
 }
 
 // ===================== Init =====================
-window.onload = async function() {
-  await initData();
-  document.getElementById('header-wells').textContent = WELLS.join(' / ');
+initData().then(() => {
   renderHistory();
-  switchTab('history');
-};
+  document.getElementById('header-wells').textContent = '共管理 ' + WELLS.length + ' 口井';
+});
 </script>
 </body>
 </html>
