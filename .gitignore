@@ -1,0 +1,26 @@
+# Build artifacts
+.buildozer/
+bin/
+dist/
+build/
+*.spec
+*.pyc
+__pycache__/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database (user data, don't commit)
+oil_well.db
+*.db
+
+# PyInstaller
+*.exe
+*.pkg
